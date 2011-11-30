@@ -142,6 +142,7 @@
 			<div><input type="number" required /></div>
 			<div><input type="range" required /></div>
 			<div><input type="color" required /></div>
+      <input type="submit" value="Submit" />
 		</form>
 		</section>
 
@@ -245,12 +246,28 @@
 			$.h5Validate.addPatterns({
 					phone: /([\+][0-9]{1,3}([ \.\-])?)?([\(]{1}[0-9]{3}[\)])?([0-9A-Z \.\-]{1,32})((x|ext|extension)?[0-9]{1,4}?)/				
 			});
-		    $('form.h5-defaults').h5Validate();
+      var validator = $('form.h5-defaults').h5Validate();
 			$('#black').h5Validate({
 				errorClass:'black'
 			});
 
-			$('#newTypes').h5Validate();
+			validator = $('#newTypes').h5Validate();
+      console.log("O")
+      validator.bind('invalidfound', function (e, error) {
+          $(error.field).addClass('error').removeClass('valid');
+          console.log('error found', arguments);
+      });
+      validator.bind('validfound', function (e, error, element) {
+          $(error.field).removeClass('error').addClass('valid');
+          console.log('no error found', arguments);
+      });
+      validator.bind('formvalid', function (e, args) {
+          console.log('form valid', args);
+          // this.submit();
+      });
+      validator.bind('forminvalid', function (e, args) {
+          console.log('form invalid', args);
+      });
 
 			$('#run-tests').click(function () {
 				runTests();

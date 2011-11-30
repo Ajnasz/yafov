@@ -20,7 +20,7 @@
             debug: false,
 
             // HTML5-compatible validation pattern library that can be extended and/or overriden.
-              //** TODO: Test the new regex patterns. Should I apply these to the new input types?
+            //** TODO: Test the new regex patterns. Should I apply these to the new input types?
             patternLibrary: {
                 // **TODO: password
                 phone: /([\+][0-9]{1,3}([ \.\-])?)?([\(]{1}[0-9]{3}[\)])?([0-9A-Z \.\-]{1,32})((x|ext|extension)?[0-9]{1,4}?)/,
@@ -59,7 +59,7 @@
             errorAttribute: 'data-h5-errorid',
 
             // Setup KB event delegation.
-            kbSelectors: ':input',
+            kbSelectors: 'input:not([type="submit"]), select, textarea',
             focusout: true,
             focusin: false,
             change: true,
@@ -90,67 +90,22 @@
             validateOnSubmit: true,
 
             // Elements to validate with allValid (only validating visible elements)
-            allValidSelectors: 'input:visible, textarea:visible, select:visible',
-
-            // Mark field invalid.
-            // ** TODO: Highlight labels
-            // ** TODO: Implement setCustomValidity as per the spec:
-            // http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#dom-cva-setcustomvalidity
-            markInvalid: function (options) {
-                var $element = $(options.element),
-                    $errorID = $(options.errorID);
-                $element.addClass(options.errorClass).removeClass(options.validClass);
-
-                // User needs help. Enable active validation.
-                $element.addClass(options.settings.activeClass);
-
-                // These ifs are technically not needed, but improve server-side performance
-                if ($errorID.length) {
-                    if ($element.attr('title')) {
-                        $errorID.text($element.attr('title'));
-                    }
-                    $errorID.show();
-                }
-                $element.data('valid', false);
-                options.settings.invalidCallback.call(options.element);
-                return $element;
-            },
-
-            // Mark field valid.
-            markValid: function (options) {
-                var $element = $(options.element),
-                    $errorID = $(options.errorID);
-
-                $element.addClass(options.validClass).removeClass(options.errorClass);
-                if ($errorID.length) {
-                    $errorID.hide();
-                }
-                $element.data('valid', true);
-                options.settings.validCallback.call(options.element);
-                return $element;
-            },
-
-            // Unmark field
-            unmark: function (options) {
-                var $element = $(options.element);
-                $element.removeClass(options.errorClass).removeClass(options.validClass);
-                $element.form.find("#" + options.element.id)
-                  .removeClass(options.errorClass).removeClass(options.validClass);
-                return $element;
-            }
+            allValidSelectors: 'input:visible, textarea:visible, select:visible'
         }
     },
     // Aliases
     defaults = h5.defaults,
     patternLibrary = defaults.patternLibrary,
 
+    ValidationResult = function (isValid, reason, field) {
+        this.isValid = isValid;
+        this.reason = reason;
+        this.field = field;
+    },
+
     methods = {
         isValid: function (settings) {
-            var $this = $(this);
-
-            settings.validate.call(this, settings);
-
-            return $this.data('valid'); // get the validation result
+            return settings.validate.call(this, settings).isValid;
         },
         allValid: function (settings) {
             var valid = true;
@@ -182,18 +137,21 @@
             required = false,
             isValid = true,
             reason = '',
-            $checkRequired = $('<input required>');
+            $checkRequired = $('<input required>'),
+            result;
 
-            /*  If the required attribute exists, set it required to true, unless it's set 'false'.
-            * This is a minor deviation from the spec, but it seems some browsers have falsey
-            * required values if the attribute is empty (should be true). The more conformant
-            * version of this failed sanity checking in the browser environment.
-            * This plugin is meant to be practical, not ideologically married to the spec.
+            /*  If the required attribute exists, set it required to true, unless
+            *  it's set 'false'.  This is a minor deviation from the spec, but it
+            *  seems some browsers have falsey required values if the attribute is
+            *  empty (should be true). The more conformant version of this failed
+            *  sanity checking in the browser environment.  This plugin is meant
+            *  to be practical, not ideologically married to the spec.
             */
             // Feature fork
-            if ($checkRequired.filter('[required]') && $checkRequired.filter('[required]').length) {
+            if ($checkRequired.filter('[required]') &&
+              $checkRequired.filter('[required]').length) {
                 required = ($this.filter('[required]').length &&
-                  $this.attr('required') !== 'false') ? true : false;
+                  $this.attr('required') !== 'false');
             } else {
                 required = ($this.attr('required') !== undefined) ? true : false;
             }
@@ -206,26 +164,16 @@
                 reason = 'pattern';
             } else {
                 isValid = true;
-                settings.markValid({
-                    element: this,
-                    errorClass: errorClass,
-                    validClass: validClass,
-                    errorID: errorID,
-                    settings: settings
-                });
-
             }
 
-            if (!isValid) {
-                settings.markInvalid({
-                    element: this,
-                    reason: reason,
-                    errorClass: errorClass,
-                    validClass: validClass,
-                    errorID: errorID,
-                    settings: settings
-                });
+            result = new ValidationResult(isValid, reason, this);
+
+            if (isValid) {
+                $this.trigger('validfound', result);
+            } else {
+                $this.trigger('invalidfound', result);
             }
+            return result;
         },
 
         /**
@@ -276,6 +224,30 @@
             $(this).find('form').attr('novalidate', 'novalidate');
             $(this).parents('form').attr('novalidate', 'novalidate');
 
+            $(this).submit(function (e) {
+                e.preventDefault();
+                var valid = true,
+                    form = $(this),
+                    errors = [],
+                    collectInvalids;
+
+                collectInvalids = function () {
+                    var result = settings.validate.call(this, settings);
+                    valid = valid && result.isValid;
+                    if (result.isValid !== true) {
+                        errors.push(result);
+                    }
+                };
+                form.find(settings.kbSelectors + ',' +
+                  settings.mSelectors + ',' +
+                  settings.activeClassSelector).each(collectInvalids);
+                if (valid) {
+                    form.trigger('formvalid');
+                } else {
+                    form.trigger('forminvalid', {errors: errors});
+                }
+            });
+
             return this.each(function () {
                 var kbEvents = {
                     focusout: settings.focusout,
@@ -292,7 +264,8 @@
 
                 settings.delegateEvents(settings.kbSelectors, kbEvents, this, settings);
                 settings.delegateEvents(settings.mSelectors, mEvents, this, settings);
-                settings.delegateEvents(settings.activeClassSelector, activeEvents, this, settings);
+                settings.delegateEvents(settings.activeClassSelector,
+                    activeEvents, this, settings);
             });
         }
     };
