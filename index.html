@@ -9,22 +9,6 @@
 -->
 
 		<link href="style01.css" media="screen" rel="stylesheet" type="text/css" />
-		<link href="http://code.jquery.com/qunit/qunit-git.css" rel="stylesheet" />
-		<script type="text/javascript">
-
-		  var _gaq = _gaq || [];
-		  _gaq.push(['_setAccount', 'UA-20667798-1']);
-		  _gaq.push(['_setDomainName', 'none']);
-		  _gaq.push(['_setAllowLinker', true]);
-		  _gaq.push(['_trackPageview']);
-
-		  (function() {
-		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		  })();
-
-		</script>
 	</head>
 	<body>
 		<header>
@@ -128,21 +112,22 @@
 
 		<!-- https://developer.mozilla.org/en/HTML/Forms_in_HTML -->
 		<form id="newTypes">
-			<div><input required title="normal" /></div>
-			<div><input type="tel" required /></div>
-			<div><input type="search" required /></div>
-			<div><input type="email" required /></div>
-			<div><input type="url" required /></div>
-			<div><input type="datetime" required /></div>
-			<div><input type="date" required /></div>
-			<div><input type="month" required /></div>
-			<div><input type="week" required /></div>
-			<div><input type="time" required /></div>
-			<div><input type="datetime-local" required /></div>
-			<div><input type="number" required /></div>
-			<div><input type="range" required /></div>
-			<div><input type="color" required /></div>
+      <div><label>required</label><input required title="normal" /></div>
+			<div><label>tel</label><input id="telfield" type="tel" required /></div>
+			<div><label>search</label><input type="search" required /></div>
+			<div><label>email</label><input type="email" required /></div>
+			<div><label>url</label><input type="url" required /></div>
+			<div><label>datetime</label><input type="datetime" required /></div>
+			<div><label>date</label><input type="date" required /></div>
+			<div><label>month</label><input type="month" required /></div>
+			<div><label>week</label><input type="week" required /></div>
+			<div><label>time</label><input type="time" required /></div>
+			<div><label>datetime-local</label><input type="datetime-local" required /></div>
+			<div><label>number</label><input type="number" required /></div>
+			<div><label>range</label><input type="range" min="5" max="10" /></div>
+			<div><label>color</label><input type="color" required /></div>
       <input type="submit" value="Submit" />
+      <button type="button" id="TelValidate">Validate tel!</button>
 		</form>
 		</section>
 
@@ -229,36 +214,26 @@
 		</dl>
 		</div>
 		<a href="#run-tests" id="run-tests">Run Tests</a>
-		<h1 id="qunit-header">QUnit Test Suite</h1>  
-			<h2 id="qunit-banner"></h2>  
-			<div id="qunit-testrunner-toolbar"></div>  
-			<h2 id="qunit-userAgent"></h2>  
-			<ol id="qunit-tests"></ol>
 
 		<script src="http://code.jquery.com/jquery.js"></script>
 		<script src="jquery.h5validate.js"></script>
-		<script src="http://code.jquery.com/qunit/qunit-git.js"></script>
-		<script src="test/test.h5validate.js"></script>
 
 		<script>
 		$(document).ready(function () {
-
-			$.h5Validate.addPatterns({
-					phone: /([\+][0-9]{1,3}([ \.\-])?)?([\(]{1}[0-9]{3}[\)])?([0-9A-Z \.\-]{1,32})((x|ext|extension)?[0-9]{1,4}?)/				
-			});
-      var validator = $('form.h5-defaults').h5Validate();
-			$('#black').h5Validate({
-				errorClass:'black'
-			});
-
-			validator = $('#newTypes').h5Validate();
-      console.log("O")
+      var validator = $('form.h5-defaults,#newTypes,#black').h5Validate();
       validator.bind('invalidfound', function (e, error) {
-          $(error.field).addClass('error').removeClass('valid');
-          console.log('error found', arguments);
+          console.log(error);
+          var field = $(error.field);
+          var fieldId = field.attr('id');
+          var msg = 'Error found. ' + error.reason;
+          field.addClass('error').removeClass('valid');
+          field.parent().find('label.error').remove();
+          field.parent().append($('<label class="error"' + (fieldId ? ' for="' + fieldId + '"' : '') + '>' + msg + '</label>'));
       });
       validator.bind('validfound', function (e, error, element) {
-          $(error.field).removeClass('error').addClass('valid');
+          var field = $(error.field);
+          field.removeClass('error').addClass('valid');
+          field.parent().find('label.error').remove();
           console.log('no error found', arguments);
       });
       validator.bind('formvalid', function (e, args) {
@@ -268,10 +243,9 @@
       validator.bind('forminvalid', function (e, args) {
           console.log('form invalid', args);
       });
-
-			$('#run-tests').click(function () {
-				runTests();
-			});
+      $('#TelValidate').click(function () {
+          $.h5Validate.validate($('#telfield'));
+      });
 		});
 		</script>
 	</body>

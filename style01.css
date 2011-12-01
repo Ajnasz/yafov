@@ -117,9 +117,11 @@ dt {
 	display:block;
 	margin:1em;
 }
+/*
 #form4 input, label {
 	float:left;
 }
+*/
 .message {
 	margin-left:1em;
 	width:20em;
@@ -189,4 +191,17 @@ dt {
 	-webkit-border-radius: 6px;
   	-moz-border-radius: 6px;
 	padding: 1em;
+}
+
+input.error {
+    border: 1px solid red;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 1), 0 0 5px rgba(255, 0, 0, 0.5);
+}
+
+.valid {
+    border: 1px solid green;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 1), 0 0 5px rgba(0, 255, 0, 0.5);
+}
+#newTypes input {
+    margin-bottom: 5px;
 }
