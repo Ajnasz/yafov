@@ -45,19 +45,6 @@
                 integer: /-?\d+/
             },
 
-            // The prefix to use for dynamically-created class names.
-            classPrefix: 'h5-',
-
-            errorClass: 'ui-state-error', // No prefix for these.
-            validClass: 'ui-state-valid', // "
-            activeClass: 'active', // Prefix will get prepended.
-            requiredClass: 'required',
-            requiredAttribute: 'required',
-            patternAttribute: 'pattern',
-
-            // Attribute which stores the ID of the error container element (without the hash).
-            errorAttribute: 'data-h5-errorid',
-
             // Setup KB event delegation.
             kbSelectors: 'input:not([type="submit"]), select, textarea',
             focusout: true,
@@ -97,81 +84,72 @@
     defaults = h5.defaults,
     patternLibrary = defaults.patternLibrary,
 
+    // Object represents a validation result
     ValidationResult = function (isValid, reason, field) {
         this.isValid = isValid;
         this.reason = reason;
         this.field = field;
     },
 
+    validatorMethods = {},
+
+    addMethod = function (selector, reason, fn) {
+        validatorMethods[reason] = {
+            selector: selector,
+            fn: fn,
+            reason: reason
+        };
+    },
+
+    validateWith = function validateWith(element, reason, value) {
+        var isValid, $this;
+        if (typeof validatorMethods[reason] !== 'undefined') {
+            $this = $(element);
+            value = value || ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
+                        $this.is(':checked') :
+                        $this.val();
+            isValid = validatorMethods[reason].fn(value, $this);
+        }
+        return isValid;
+    },
+
+    isOptional = function isOptional(element, value) {
+        return !element.is('[required],.required') && value === '';
+    },
+
+    validateElement = function (element) {
+        var $this = $(element),
+
+        value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
+                $this.is(':checked') :
+                $this.val(),
+        // Add the hash for convenience. This is done in two steps to avoid
+        // two attribute lookups.
+        isValid = true,
+        reason = '',
+        result;
+
+        $.each(validatorMethods, function (name, validator) {
+            if ($this.is(validator.selector)) {
+                isValid = validateWith($this, name);
+                if (!isValid) {
+                    reason = validator.reason;
+                    return false;
+                }
+            }
+        });
+        result = new ValidationResult(isValid, reason, $this.get(0));
+        return result;
+    },
+
     methods = {
-        isValid: function (settings) {
-            return settings.validate.call(this, settings).isValid;
-        },
-        allValid: function (settings) {
-            var valid = true;
-            $(this).find(settings.allValidSelectors).each(function () {
-                valid = $(this).h5Validate('isValid') && valid;
-            });
-            return valid;
-        },
-        validate: function (settings) {
-            // Get the HTML5 pattern attribute if it exists.
-            // ** TODO: If a pattern class exists, grab the pattern from the
-            // patternLibrary, but the pattern attrib should override that
-            // value.
-            var $this = $(this),
-              pattern = $this.filter('[pattern]')[0] ? $this.attr('pattern') : false,
-
-            // The pattern attribute must match the whole value, not just a subset:
-            // "...as if it implied a ^(?: at the start of the pattern and a )$ at the end."
-            re = new RegExp('^(?:' + pattern + ')$'),
-            value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
-                $this.is(':checked') : $this.val(),
-            errorClass = settings.errorClass,
-            validClass = settings.validClass,
-            // Get the ID of the error element.
-            errorIDbare = $this.attr(settings.errorAttribute) || false,
-            // Add the hash for convenience. This is done in two steps to avoid
-            // two attribute lookups.
-            errorID = errorIDbare ? '#' + errorIDbare : false,
-            required = false,
-            isValid = true,
-            reason = '',
-            $checkRequired = $('<input required>'),
-            result;
-
-            /*  If the required attribute exists, set it required to true, unless
-            *  it's set 'false'.  This is a minor deviation from the spec, but it
-            *  seems some browsers have falsey required values if the attribute is
-            *  empty (should be true). The more conformant version of this failed
-            *  sanity checking in the browser environment.  This plugin is meant
-            *  to be practical, not ideologically married to the spec.
-            */
-            // Feature fork
-            if ($checkRequired.filter('[required]') &&
-              $checkRequired.filter('[required]').length) {
-                required = ($this.filter('[required]').length &&
-                  $this.attr('required') !== 'false');
+        validate: function (element) {
+            var $element = $(element),
+                result = validateElement($element.get(0));
+            if (result.isValid) {
+                $element.trigger('validfound', result);
             } else {
-                required = ($this.attr('required') !== undefined) ? true : false;
-            }
-
-            if (required && !value) {
-                isValid = false;
-                reason = 'required';
-            } else if (pattern && !re.test(value) && value) {
-                isValid = false;
-                reason = 'pattern';
-            } else {
-                isValid = true;
-            }
-
-            result = new ValidationResult(isValid, reason, this);
-
-            if (isValid) {
-                $this.trigger('validfound', result);
-            } else {
-                $this.trigger('invalidfound', result);
+                $element.trigger('invalidfound', result);
             }
             return result;
         },
@@ -186,10 +164,10 @@
         */
         delegateEvents: function (selectors, eventFlags, element, settings) {
             var events = [],
-              key = 0,
-              validate;
+              key, validate;
+
             validate = function () {
-                settings.validate.call(this, settings);
+                var result = methods.validate(this);
             };
             $.each(eventFlags, function (key, value) {
                 if (value) {
@@ -213,18 +191,11 @@
         * @returns {object} jQuery object for chaining.
         */
         bindDelegation: function (settings) {
-            // Attach patterns from the library to elements.
-            $.each(patternLibrary, function (key, value) {
-                var pattern = value.toString();
-                pattern = pattern.substring(1, pattern.length - 1);
-                $('.' + settings.classPrefix + key).attr('pattern', pattern);
-            });
+            this.filter('form').attr('novalidate', 'novalidate');
+            this.find('form').attr('novalidate', 'novalidate');
+            this.parents('form').attr('novalidate', 'novalidate');
 
-            $(this).filter('form').attr('novalidate', 'novalidate');
-            $(this).find('form').attr('novalidate', 'novalidate');
-            $(this).parents('form').attr('novalidate', 'novalidate');
-
-            $(this).submit(function (e) {
+            this.submit(function (e) {
                 e.preventDefault();
                 var valid = true,
                     form = $(this),
@@ -232,7 +203,7 @@
                     collectInvalids;
 
                 collectInvalids = function () {
-                    var result = settings.validate.call(this, settings);
+                    var result = methods.validate(this);
                     valid = valid && result.isValid;
                     if (result.isValid !== true) {
                         errors.push(result);
@@ -242,6 +213,7 @@
                   settings.mSelectors + ',' +
                   settings.activeClassSelector).each(collectInvalids);
                 if (valid) {
+                    errors = null;
                     form.trigger('formvalid');
                 } else {
                     form.trigger('forminvalid', {errors: errors});
@@ -257,15 +229,10 @@
                 },
                 mEvents = {
                     click: settings.click
-                },
-                activeEvents = {
-                    keyup: settings.activeKeyup
                 };
 
                 settings.delegateEvents(settings.kbSelectors, kbEvents, this, settings);
                 settings.delegateEvents(settings.mSelectors, mEvents, this, settings);
-                settings.delegateEvents(settings.activeClassSelector,
-                    activeEvents, this, settings);
             });
         }
     };
@@ -292,42 +259,22 @@
             }
             return patternLibrary;
         },
-        /**
-        * Take a valid jQuery selector, and a list of valid values to
-        * validate against.
-        * If the user input isn't in the list, validation fails.
-        *
-        * @param {String} selector Any valid jQuery selector.
-        *
-        * @param {Array} values A list of valid values to validate selected
-        * fields against.
-        */
-        validValues: function (selector, values) {
-            var i = 0,
-                ln = values.length,
-                pattern = '',
-                re;
-            // Build regex pattern
-            for (i = 0; i < ln; i += 1) {
-                pattern = pattern ? pattern + '|' + values[i] : values[i];
-            }
-            re = new RegExp('^(?:' + pattern + ')$');
-            $(selector).data('regex', re);
+        validate: function (element) {
+            return methods.validate(element);
+        },
+        elementIsValid: function (element) {
+            return validateElement(element).isValid;
+        },
+        validateWith: function (element, reason, value) {
+            return validateWith(element, reason, value);
         }
     };
 
     $.fn.h5Validate = function (options) {
         // Combine defaults and options to get current settings.
         var settings = $.extend({}, defaults, options, methods),
-            activeClass = settings.classPrefix + settings.activeClass,
             action,
             args;
-
-        $.extend(settings, {
-            activeClass: activeClass,
-            activeClassSelector: '.' + activeClass,
-            requiredClass: settings.classPrefix + settings.requiredClass
-        });
 
         // Expose public API.
         $.extend($.fn.h5Validate, h5);
@@ -344,4 +291,76 @@
         // Returning the jQuery object allows for method chaining.
         return methods.bindDelegation.call(this, settings);
     };
+
+    $([
+        ['[required],.required', 'required', function (value, element) {
+            return !!value;
+        }],
+        ['[type="url"],.url', 'url', function (value, element) {
+            return isOptional(element, value) || h5.defaults.patternLibrary.url.test(value);
+        }],
+        ['[type="email"],.email', 'email', function (value, element) {
+            return isOptional(element, value) || h5.defaults.patternLibrary.email.test(value);
+        }],
+        ['[type="tel"],.tel', 'tel', function (value, element) {
+            return isOptional(element, value) || h5.defaults.patternLibrary.phone.test(value);
+        }],
+        ['[type="number"],.number', 'number', function (value, element) {
+            // +null returns 0
+            return isOptional(element, value) || value !== null && !isNaN(+value);
+        }],
+        ['[max],.max', 'max', function (value, element) {
+            // +null returns 0
+            var optional = isOptional(element, value),
+                valid = true,
+                maxVal;
+            if (!optional) {
+                if (element.is('[max]')) {
+                    maxVal = element.attr('max');
+                } else {
+                    maxVal = element.attr('data-max');
+                }
+                valid = +maxVal >= +value && validateWith(element, 'number', value);
+            }
+            return valid;
+        }],
+        ['[min],.min', 'min', function (value, element) {
+
+            var optional = isOptional(element, value),
+                valid = true,
+                minVal;
+
+            if (!optional) {
+                if (element.is('[min]')) {
+                    minVal = element.attr('min');
+                } else {
+                    minVal = element.attr('data-min');
+                }
+                valid = +minVal <= +value && validateWith(element, 'number', value);
+            }
+            return valid;
+        }],
+        // hovewer min and max will validate it
+        ['[range],.range', 'range', function (value, element) {
+            return true;
+            /*
+            var optional = isOptional(element, value),
+                valid = true;
+            if (!optional) {
+                valid = validateWith(element, 'min', value) &&
+                    validateWith(element, 'max', value);
+            }
+            return valid;
+            */
+        }],
+        ['.alpha', 'alpha', function (value, element) {
+            return isOptional(element, value) || h5.defaults.patternLibrary.alpha.test(value);
+        }],
+        ['.alphanumeric', 'alphanumeric', function (value, element) {
+            return isOptional(element, value) ||
+                    h5.defaults.patternLibrary.alphanumeric.test(value);
+        }]
+    ]).each(function () {
+        addMethod.apply(null, this);
+    });
 }(jQuery));
