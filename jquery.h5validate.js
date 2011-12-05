@@ -1,21 +1,14 @@
 /**
- * h5Validate
- * @version v0.6.4
- * Using semantic versioning: http://semver.org/
- * @author Eric Hamilton dilvie@dilvie.com
- * @copyright 2010 - 2011 Eric Hamilton
- * Dual licensed under the MIT and GPL licenses:
- * http://www.opensource.org/licenses/mit-license.php
+ * yafov
  * http://www.gnu.org/licenses/gpl.html
- *
- * Developed under the sponsorship of Root Music, Zumba Fitness, LLC, and Rese Property Management
+ * A fork of https://github.com/dilvie/h5Validate
  */
 
 /*global jQuery, window */
 /*jslint browser: true, devel: true, onevar: true, undef: true, nomen: true,
         eqeqeq: true, bitwise: true, regexp: true, newcap: true, immed: true */
 (function ($) {
-    var h5 = { // Public API
+    var yafov = { // Public API
         defaults: {
             debug: false,
 
@@ -58,11 +51,6 @@
 
             activeKeyup: true,
 
-            // What do we name the required .data variable?
-            requiredVar: 'h5-required',
-
-            // What do we name the pattern .data variable?
-            patternVar: 'h5-pattern',
             stripMarkup: true,
 
             // Validate on submit?
@@ -81,14 +69,16 @@
         }
     },
     // Aliases
-    defaults = h5.defaults,
+    defaults = yafov.defaults,
     patternLibrary = defaults.patternLibrary,
 
     // Object represents a validation result
     ValidationResult = function (isValid, reason, field) {
-        this.isValid = isValid;
-        this.reason = reason;
-        this.field = field;
+        return {
+            isValid: isValid,
+            reason: reason,
+            field: field
+        };
     },
 
     validatorMethods = {},
@@ -128,7 +118,6 @@
         isValid = true,
         reason = '',
         result;
-
         $.each(validatorMethods, function (name, validator) {
             if ($this.is(validator.selector)) {
                 isValid = validateWith($this, name);
@@ -177,7 +166,7 @@
             key = 0;
             for (key in events) {
                 if (events.hasOwnProperty(key)) {
-                    $(element).delegate(selectors, events[key] + '.h5Validate', validate);
+                    $(element).delegate(selectors, events[key] + '.yafov', validate);
                 }
             }
             return element;
@@ -196,6 +185,7 @@
             this.parents('form').attr('novalidate', 'novalidate');
 
             this.submit(function (e) {
+                console.log('submit');
                 e.preventDefault();
                 var valid = true,
                     form = $(this),
@@ -237,7 +227,7 @@
         }
     };
 
-    $.h5Validate = {
+    $.yafov = {
         /**
         * Take a map of pattern names and HTML5-compatible regular
         * expressions, and add them to the patternLibrary. Patterns in
@@ -270,14 +260,14 @@
         }
     };
 
-    $.fn.h5Validate = function (options) {
+    $.fn.yafov = function (options) {
         // Combine defaults and options to get current settings.
         var settings = $.extend({}, defaults, options, methods),
             action,
             args;
 
         // Expose public API.
-        $.extend($.fn.h5Validate, h5);
+        $.extend($.fn.yafov, yafov);
 
         if (typeof options === 'string' && typeof methods[options] === 'function') {
             args = $.makeArray(arguments);
@@ -297,13 +287,13 @@
             return !!value;
         }],
         ['[type="url"],.url', 'url', function (value, element) {
-            return isOptional(element, value) || h5.defaults.patternLibrary.url.test(value);
+            return isOptional(element, value) || yafov.defaults.patternLibrary.url.test(value);
         }],
         ['[type="email"],.email', 'email', function (value, element) {
-            return isOptional(element, value) || h5.defaults.patternLibrary.email.test(value);
+            return isOptional(element, value) || yafov.defaults.patternLibrary.email.test(value);
         }],
         ['[type="tel"],.tel', 'tel', function (value, element) {
-            return isOptional(element, value) || h5.defaults.patternLibrary.phone.test(value);
+            return isOptional(element, value) || yafov.defaults.patternLibrary.phone.test(value);
         }],
         ['[type="number"],.number', 'number', function (value, element) {
             // +null returns 0
@@ -354,11 +344,11 @@
             */
         }],
         ['.alpha', 'alpha', function (value, element) {
-            return isOptional(element, value) || h5.defaults.patternLibrary.alpha.test(value);
+            return isOptional(element, value) || yafov.defaults.patternLibrary.alpha.test(value);
         }],
         ['.alphanumeric', 'alphanumeric', function (value, element) {
             return isOptional(element, value) ||
-                    h5.defaults.patternLibrary.alphanumeric.test(value);
+                    yafov.defaults.patternLibrary.alphanumeric.test(value);
         }]
     ]).each(function () {
         addMethod.apply(null, this);
