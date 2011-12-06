@@ -72,15 +72,6 @@
     defaults = yafov.defaults,
     patternLibrary = defaults.patternLibrary,
 
-    // Object represents a validation result
-    ValidationResult = function (isValid, reason, field) {
-        return {
-            isValid: isValid,
-            reason: reason,
-            field: field
-        };
-    },
-
     validatorMethods = {},
 
     addMethod = function (selector, reason, fn) {
@@ -127,8 +118,11 @@
                 }
             }
         });
-        result = new ValidationResult(isValid, reason, $this.get(0));
-        return result;
+        return {
+            isValid: isValid,
+            reason: reason,
+            field: $this[0]
+        };
     },
 
     methods = {
