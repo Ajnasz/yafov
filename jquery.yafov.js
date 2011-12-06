@@ -179,7 +179,6 @@
             this.parents('form').attr('novalidate', 'novalidate');
 
             this.submit(function (e) {
-                console.log('submit');
                 e.preventDefault();
                 var valid = true,
                     form = $(this),
