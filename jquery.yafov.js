@@ -72,33 +72,118 @@
     defaults = yafov.defaults,
     patternLibrary = defaults.patternLibrary,
 
-    validatorMethods = {},
+    validatorMethods = (function () {
+        var methods = [],
+            methodsByName = {},
+            interf = {
+                /**
+                 * When we add a new validator a name must be given. If a
+                 * validator already exists with the same name, it will be
+                 * overwritten
+                 * @param String name the name of the validator, eg.: required, number
+                 * @param jQuerySelectorString selector The selector of the
+                 * element what should match. Only those elements will be
+                 * validated which are matching to this selector (see
+                 * $(element).is('selector'))
+                 * @param Function fn The validator function. The function must handle 3 arguments:
+                 * value: the current value of the element: which the
+                 *   $(element).val() except for checboxes and radio fields,
+                 *   because then $(element).is(':checked')
+                 * element: the element which needs to be validated (jQuery object)
+                 * callback: a callback function what you should call when you
+                 *   figured out that the element is valid or not. You must
+                 *   pass the result as a boolean. It must bee true if the
+                 *   field is valid or false if it's invalid
+                 */
+                add: function (selector, name, fn) {
+                    var existIndex, index, item;
 
-    addMethod = function (selector, reason, fn) {
-        validatorMethods[reason] = {
-            selector: selector,
-            fn: fn,
-            reason: reason
-        };
+                    existIndex = interf.indexByName(name);
+                    index = existIndex > -1 ? existIndex : methods.length;
+                    item = {
+                        selector: selector,
+                        fn: fn,
+                        name: name
+                    };
+                    methodsByName[name] = index;
+                    methods[index] = item;
+                },
+                /**
+                 * method to get the validator object's index by it's name
+                 * @param String the name of the validator
+                 */
+                indexByName: function (name) {
+                    var index = methodsByName[name];
+                    return typeof index !== 'undefined' ? index : -1;
+                },
+                /**
+                 * method to get the validator object by it's index
+                 * @param Int the index of the validator
+                 */
+                get: function (index) {
+                    return methods[index];
+                },
+                /**
+                 * method to get the validator object by it's name
+                 * @param String the name of the validator
+                 */
+                getByName: function (name) {
+                    return interf.get(interf.indexByName(name));
+                },
+                /**
+                 * Method to get the number of the validators have added
+                 */
+                len: function () {
+                    return methods.length;
+                }
+            };
+        // finally return the interface
+        return interf;
+    }()),
+
+    addMethod = function (selector, name, fn) {
+        validatorMethods.add(selector, name, fn);
     },
 
-    validateWith = function validateWith(element, reason, value) {
-        var isValid, $this;
-        if (typeof validatorMethods[reason] !== 'undefined') {
-            $this = $(element);
-            value = value || ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
-                        $this.is(':checked') :
-                        $this.val();
-            isValid = validatorMethods[reason].fn(value, $this);
+    /**
+     * @param HTMLElement element A input or textarea or select which will be validated
+     * @param String name The validator name, defines which validator needs to be used
+     * @param String value Optional The current value of the element. Don't
+     * need to pass the value, because we will get it if it's not a string, but
+     * if you already have it, you can pass it here so we don't need to ask for
+     * it again
+     * @param Function cb Callback function. This is NOT optional. The third or
+     * fourth argument must be the callback. It will receive one argument,
+     * which will be a boolean: true if the field is valid, false if not
+     */
+    validateWith = function validateWith(element, name) {
+        var args = arguments,
+            method, cb, value, $this;
+        if (typeof args[2] === 'function') {
+            cb = args[2];
+        } else {
+            value = args[2];
+            cb = args[3];
         }
-        return isValid;
+        method = validatorMethods.getByName(name);
+        if (typeof method !== 'undefined') {
+            $this = $(element);
+            if (typeof value !== 'string') {
+                value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
+                            $this.is(':checked') :
+                            $this.val();
+            }
+            method.fn(value, $this, cb);
+        } else {
+            cb(true);
+        }
     },
 
     isOptional = function isOptional(element, value) {
         return !element.is('[required],.required') && value === '';
     },
 
-    validateElement = function (element) {
+    validateElement = function (element, cb) {
         var $this = $(element),
 
         value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
@@ -106,35 +191,66 @@
                 $this.val(),
         // Add the hash for convenience. This is done in two steps to avoid
         // two attribute lookups.
-        isValid = true,
-        reason = '',
-        result;
-        $.each(validatorMethods, function (name, validator) {
-            if ($this.is(validator.selector)) {
-                isValid = validateWith($this, name);
-                if (!isValid) {
-                    reason = validator.reason;
-                    return false;
+        vl = validatorMethods.len(),
+        index = 0,
+        result = {
+            isValid: true,
+            name: '',
+            field: $this[0]
+        },
+        validate;
+
+        validate = function () {
+            var validator = validatorMethods.get(index);
+            // check if need to validate
+            if (result.isValid && $this.is(validator.selector)) {
+                validateWith($this, validator.name, function (valid) {
+                    result.isValid = valid;
+                    result.name = validator.name;
+                    if (!valid) {
+                        index = vl - 1;
+                    }
+                    if (index + 1 < vl) {
+                        index += 1;
+                        if (valid) {
+                            validate();
+                        } else {
+                            cb(result);
+                        }
+                    } else {
+                        cb(result);
+                    }
+                });
+            } else {
+                if (index + 1 < vl) {
+                    index += 1;
+                    validate();
+                } else {
+                    cb(result);
                 }
             }
-        });
-        return {
-            isValid: isValid,
-            reason: reason,
-            field: $this[0]
         };
+
+        if (vl > 0) {
+            validate(index);
+        } else {
+            cb(result);
+        }
     },
 
     methods = {
-        validate: function (element) {
-            var $element = $(element),
-                result = validateElement($element.get(0));
-            if (result.isValid) {
-                $element.trigger('validfound', result);
-            } else {
-                $element.trigger('invalidfound', result);
-            }
-            return result;
+        validate: function (element, cb) {
+            var $element = $(element);
+            validateElement($element.get(0), function (result) {
+                if (result.isValid) {
+                    $element.trigger('validfound', result);
+                } else {
+                    $element.trigger('invalidfound', result);
+                }
+                if (typeof cb === 'function') {
+                    cb(result);
+                }
+            });
         },
 
         /**
@@ -147,21 +263,21 @@
         */
         delegateEvents: function (selectors, eventFlags, element, settings) {
             var events = [],
-              key, validate;
+              $element = $(element),
+              key, validate, i, el;
 
-            validate = function () {
-                var result = methods.validate(this);
+            validate = function (e) {
+                methods.validate(this);
             };
             $.each(eventFlags, function (key, value) {
                 if (value) {
-                    events[key] = key;
+                    events.push(key);
                 }
             });
             key = 0;
-            for (key in events) {
-                if (events.hasOwnProperty(key)) {
-                    $(element).delegate(selectors, events[key] + '.yafov', validate);
-                }
+
+            for (i = 0, el = events.length; i < el; i += 1) {
+                $element.delegate(selectors, events[i] + '.yafov', validate);
             }
             return element;
         },
@@ -183,24 +299,31 @@
                 var valid = true,
                     form = $(this),
                     errors = [],
+                    validated = 0,
+                    fields,
                     collectInvalids;
 
                 collectInvalids = function () {
-                    var result = methods.validate(this);
-                    valid = valid && result.isValid;
-                    if (result.isValid !== true) {
-                        errors.push(result);
-                    }
+                    methods.validate(this, function (result) {
+                        valid = valid && result.isValid;
+                        if (result.isValid !== true) {
+                            errors.push(result);
+                        }
+                        validated += 1;
+                        if (validated >= fields.length) {
+                            if (valid) {
+                                errors = null;
+                                form.trigger('formvalid');
+                            } else {
+                                form.trigger('forminvalid', {errors: errors});
+                            }
+                        }
+                    });
                 };
-                form.find(settings.kbSelectors + ',' +
+                fields = form.find(settings.kbSelectors + ',' +
                   settings.mSelectors + ',' +
-                  settings.activeClassSelector).each(collectInvalids);
-                if (valid) {
-                    errors = null;
-                    form.trigger('formvalid');
-                } else {
-                    form.trigger('forminvalid', {errors: errors});
-                }
+                  settings.activeClassSelector);
+                fields.each(collectInvalids);
             });
 
             return this.each(function () {
@@ -248,8 +371,8 @@
         elementIsValid: function (element) {
             return validateElement(element).isValid;
         },
-        validateWith: function (element, reason, value) {
-            return validateWith(element, reason, value);
+        validateWith: function (element, name, value, cb) {
+            return validateWith(element, name, value, cb);
         }
     };
 
@@ -276,38 +399,47 @@
     };
 
     $([
-        ['[required],.required', 'required', function (value, element) {
-            return !!value;
+        ['[required],.required', 'required', function (value, element, cb) {
+            var valid = !!value;
+            cb(valid);
         }],
-        ['[type="url"],.url', 'url', function (value, element) {
-            return isOptional(element, value) || yafov.defaults.patternLibrary.url.test(value);
+        ['[type="url"],.url', 'url', function (value, element, cb) {
+            var valid = isOptional(element, value) ||
+                yafov.defaults.patternLibrary.url.test(value);
+            cb(valid);
         }],
-        ['[type="email"],.email', 'email', function (value, element) {
-            return isOptional(element, value) || yafov.defaults.patternLibrary.email.test(value);
+        ['[type="email"],.email', 'email', function (value, element, cb) {
+            var valid = isOptional(element, value) ||
+                yafov.defaults.patternLibrary.email.test(value);
+            cb(valid);
         }],
-        ['[type="tel"],.tel', 'tel', function (value, element) {
-            return isOptional(element, value) || yafov.defaults.patternLibrary.phone.test(value);
+        ['[type="tel"],.tel', 'tel', function (value, element, cb) {
+            var valid = isOptional(element, value) ||
+                yafov.defaults.patternLibrary.phone.test(value);
+            cb(valid);
         }],
-        ['[type="number"],.number', 'number', function (value, element) {
+        ['[type="number"],.number', 'number', function (value, element, cb) {
             // +null returns 0
-            return isOptional(element, value) || value !== null && !isNaN(+value);
+            var valid = isOptional(element, value) || value !== null && !isNaN(+value);
+            cb(valid);
         }],
-        ['[max],.max', 'max', function (value, element) {
-            // +null returns 0
-            var optional = isOptional(element, value),
-                valid = true,
-                maxVal;
-            if (!optional) {
-                if (element.is('[max]')) {
-                    maxVal = element.attr('max');
-                } else {
-                    maxVal = element.attr('data-max');
+        ['[max],.max', 'max', function (value, element, cb) {
+            validateWith(element, 'number', value, function (valid) {
+                // +null returns 0
+                var optional = isOptional(element, value),
+                    maxVal;
+                if (!optional) {
+                    if (element.is('[max]')) {
+                        maxVal = element.attr('max');
+                    } else {
+                        maxVal = element.attr('data-max');
+                    }
+                    valid = +maxVal >= +value && valid;
                 }
-                valid = +maxVal >= +value && validateWith(element, 'number', value);
-            }
-            return valid;
+                cb(valid);
+            });
         }],
-        ['[min],.min', 'min', function (value, element) {
+        ['[min],.min', 'min', function (value, element, cb) {
 
             var optional = isOptional(element, value),
                 valid = true,
@@ -321,11 +453,12 @@
                 }
                 valid = +minVal <= +value && validateWith(element, 'number', value);
             }
-            return valid;
+            cb(valid);
         }],
         // hovewer min and max will validate it
-        ['[range],.range', 'range', function (value, element) {
-            return true;
+        ['[range],.range', 'range', function (value, element, cb) {
+            cb(true);
+            // return true;
             /*
             var optional = isOptional(element, value),
                 valid = true;
@@ -336,12 +469,15 @@
             return valid;
             */
         }],
-        ['.alpha', 'alpha', function (value, element) {
-            return isOptional(element, value) || yafov.defaults.patternLibrary.alpha.test(value);
+        ['.alpha', 'alpha', function (value, element, cb) {
+            var valid = isOptional(element, value) ||
+                        yafov.defaults.patternLibrary.alpha.test(value);
+            cb(valid);
         }],
-        ['.alphanumeric', 'alphanumeric', function (value, element) {
-            return isOptional(element, value) ||
+        ['.alphanumeric', 'alphanumeric', function (value, element, cb) {
+            var valid = isOptional(element, value) ||
                     yafov.defaults.patternLibrary.alphanumeric.test(value);
+            cb(valid);
         }]
     ]).each(function () {
         addMethod.apply(null, this);
