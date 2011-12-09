@@ -432,20 +432,21 @@
             });
         }],
         ['[min],.min', 'min', function (value, element, cb) {
+            validateWith(element, 'number', value, function (valid) {
+                var optional = isOptional(element, value),
+                    minVal;
 
-            var optional = isOptional(element, value),
-                valid = true,
-                minVal;
-
-            if (!optional) {
-                if (element.is('[min]')) {
-                    minVal = element.attr('min');
-                } else {
-                    minVal = element.attr('data-min');
+                if (!optional) {
+                    if (element.is('[min]')) {
+                        minVal = element.attr('min');
+                    } else {
+                        minVal = element.attr('data-min');
+                    }
+                    valid = +minVal <= +value && valid;
                 }
-                valid = +minVal <= +value && validateWith(element, 'number', value);
-            }
-            cb(valid);
+                cb(valid);
+            });
+
         }],
         // hovewer min and max will validate it
         ['[range],.range', 'range', function (value, element, cb) {
