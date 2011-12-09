@@ -5,7 +5,7 @@
 	</head>
 	<body>
 
-		<h2>New Input Types (Use with caution.)</h2>
+		<h2>New Input Types</h2>
 		<!-- https://developer.mozilla.org/en/HTML/Forms_in_HTML -->
 		<form id="newTypes">
       <div><label>required: </label><br /><input required title="normal" /></div>
@@ -31,11 +31,19 @@
 
 		<script type="text/javascript">
 		$(document).ready(function () {
+        $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
+          $(element).addClass('load');
+          setTimeout(function () {
+              var isValid = value !== '123';
+              cb(isValid);
+              $(element).removeClass('load');
+          }, 1000);
+        });
       var validator = $('#newTypes').yafov();
       validator.bind('invalidfound', function (e, error) {
           var field = $(error.field);
           var fieldId = field.attr('id');
-          var msg = 'Error found. ' + error.reason;
+          var msg = 'Error found. ' + error.name;
           field.addClass('error').removeClass('valid');
           field.parent().find('label.error').remove();
           field.parent().append($('<label class="error"' + (fieldId ? ' for="' + fieldId + '"' : '') + '>' + msg + '</label>'));
@@ -54,7 +62,9 @@
           console.log('form invalid', args);
       });
       $('#TelValidate').click(function () {
-          $.yafov.validate($('#telfield'));
+          $.yafov.validateWith($('#telfield'), 'required', function (isValid) {
+              console.log('validate with result: ', isValid);
+          });
       });
 		});
 		</script>
