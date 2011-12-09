@@ -217,6 +217,10 @@ ul > li {
   padding: 5px;
 }
 
+#download {
+    float: right;
+}
+
 input.error {
   border: 2px solid #f00;
 }
