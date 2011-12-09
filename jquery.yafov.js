@@ -451,15 +451,22 @@
         // hovewer min and max will validate it
         ['[range],.range', 'range', function (value, element, cb) {
             cb(true);
-            // return true;
+
             /*
-            var optional = isOptional(element, value),
-                valid = true;
+            var optional = isOptional(element, value);
             if (!optional) {
-                valid = validateWith(element, 'min', value) &&
-                    validateWith(element, 'max', value);
+                validateWith(element, 'min', value, function (minValid) {
+                    if (minValid) {
+                        validateWith(element, 'max', value, function (maxValid) {
+                            cb(minValid && maxValid);
+                        });
+                    } else {
+                        cb(minValid);
+                    }
+                });
+            } else {
+                cb(true);
             }
-            return valid;
             */
         }],
         ['.alpha', 'alpha', function (value, element, cb) {
