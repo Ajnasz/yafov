@@ -74,6 +74,7 @@
 
     validatorMethods = (function () {
         var methods = [],
+            /* an object to store the method indexes by their name */
             methodsByName = {},
             interf = {
                 /**
@@ -202,21 +203,15 @@
         },
         // method run when a validation finished
         onValidate,
+        validatorItemCb,
         validate;
 
         validate = function () {
             var validator = validatorMethods.get(index);
             // check if need to validate
             if (result.isValid && $this.is(validator.selector)) {
-                validateWith($this, validator.name, function (valid) {
-                    // update result
-                    result.isValid = valid;
-                    result.name = validator.name;
-                    if (!valid) {
-                        index = vl - 1;
-                    }
-                    onValidate();
-                });
+                result.name = validator.name;
+                validateWith($this, validator.name, validatorItemCb);
             } else {
                 onValidate();
             }
@@ -228,6 +223,15 @@
             } else {
                 cb(result);
             }
+        };
+        validatorItemCb = function (valid) {
+            // update result
+            result.isValid = valid;
+            // if not valid make sure we don't run the next validator
+            if (!valid) {
+                index = vl - 1;
+            }
+            onValidate();
         };
         validate(index);
     },
@@ -464,6 +468,26 @@
             cb(valid);
         }],
         /*
+         * Value must be equal or less then max and more or equal then min
+         * range validator: <input type="text" min="3" max="5" ...
+         */
+        ['[type="range"],.range', 'range', function (value, element, cb) {
+            var optional = isOptional(element, value);
+            if (!optional) {
+                validateWith(element, 'min', value, function (minValid) {
+                    if (minValid) {
+                        validateWith(element, 'max', value, function (maxValid) {
+                            cb(minValid && maxValid);
+                        });
+                    } else {
+                        cb(minValid);
+                    }
+                });
+            } else {
+                cb(true);
+            }
+        }],
+        /*
          * Value must be equal or less
          * max validator: <input type="text" max="5" ...
          */
@@ -503,32 +527,6 @@
                 cb(valid);
             });
 
-        }],
-        /*
-         * Value must be equal or less then max and more or equal then min
-         * range validator: <input type="text" min="3" max="5" ...
-         */
-        ['[range],.range', 'range', function (value, element, cb) {
-            // we can return true, because the min and max validator will say
-            // if something is wrong
-            cb(true);
-
-            /*
-            var optional = isOptional(element, value);
-            if (!optional) {
-                validateWith(element, 'min', value, function (minValid) {
-                    if (minValid) {
-                        validateWith(element, 'max', value, function (maxValid) {
-                            cb(minValid && maxValid);
-                        });
-                    } else {
-                        cb(minValid);
-                    }
-                });
-            } else {
-                cb(true);
-            }
-            */
         }],
         /*
          * value must contain only alpha chars
