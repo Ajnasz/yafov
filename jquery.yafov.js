@@ -198,6 +198,8 @@
             name: '',
             field: $this[0]
         },
+        // method run when a validation finished
+        onValidate,
         validate;
 
         validate = function () {
@@ -205,37 +207,27 @@
             // check if need to validate
             if (result.isValid && $this.is(validator.selector)) {
                 validateWith($this, validator.name, function (valid) {
+                    // update result
                     result.isValid = valid;
                     result.name = validator.name;
                     if (!valid) {
                         index = vl - 1;
                     }
-                    if (index + 1 < vl) {
-                        index += 1;
-                        if (valid) {
-                            validate();
-                        } else {
-                            cb(result);
-                        }
-                    } else {
-                        cb(result);
-                    }
+                    onValidate();
                 });
             } else {
-                if (index + 1 < vl) {
-                    index += 1;
-                    validate();
-                } else {
-                    cb(result);
-                }
+                onValidate();
             }
         };
-
-        if (vl > 0) {
-            validate(index);
-        } else {
-            cb(result);
-        }
+        onValidate = function () {
+            if (index + 1 < vl) {
+                index += 1;
+                validate();
+            } else {
+                cb(result);
+            }
+        };
+        validate(index);
     },
 
     methods = {
