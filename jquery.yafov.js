@@ -186,13 +186,15 @@
     validateElement = function (element, cb) {
         var $this = $(element),
 
+        // get the value once, so it gonna be cached
         value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
                 $this.is(':checked') :
                 $this.val(),
-        // Add the hash for convenience. This is done in two steps to avoid
-        // two attribute lookups.
+        // length of the validator methods
         vl = validatorMethods.len(),
+        // loop index
         index = 0,
+        // default result object
         result = {
             isValid: true,
             name: '',
@@ -357,14 +359,36 @@
             }
             return patternLibrary;
         },
-        validate: function (element) {
-            return methods.validate(element);
+        /**
+         * Validate an element
+         * @param HTMLElement element The element what you want to validate
+         * @param Function cb Callback function, with one argument which is a
+         * result object {isValid: bool, name: validatorName, field: element}
+         */
+        validate: function (element, cb) {
+            methods.validate(element, cb);
         },
-        elementIsValid: function (element) {
-            return validateElement(element).isValid;
+        elementIsValid: function (element, cb) {
+            validateElement(element, function (result) {
+                cb(result.isValid);
+            });
         },
+        /**
+        * @param HTMLElement element A input or textarea or select which will be validated
+        * @param String name The validator name, defines which validator needs to be used
+        * @param String value Optional The current value of the element. Don't
+        * need to pass the value, because we will get it if it's not a string, but
+        * if you already have it, you can pass it here so we don't need to ask for
+        * it again
+        * @param Function cb Callback function. This is NOT optional. The third or
+        * fourth argument must be the callback. It will receive one argument,
+        * which will be a boolean: true if the field is valid, false if not
+        */
         validateWith: function (element, name, value, cb) {
-            return validateWith(element, name, value, cb);
+            validateWith(element, name, value, cb);
+        },
+        addMethod: function (selector, name, fn) {
+            addMethod(selector, name, fn);
         }
     };
 
@@ -391,30 +415,58 @@
     };
 
     $([
+        /*
+         * value shouldn't be empty
+         * <input type="text" required />
+         * <input type="text" class="required" />
+         */
         ['[required],.required', 'required', function (value, element, cb) {
             var valid = !!value;
             cb(valid);
         }],
+        /*
+         * value must be a valid url
+         * <input type="url" />
+         * <input type="text" class="url" />
+         */
         ['[type="url"],.url', 'url', function (value, element, cb) {
             var valid = isOptional(element, value) ||
                 yafov.defaults.patternLibrary.url.test(value);
             cb(valid);
         }],
+        /*
+         * value must be a valid email address
+         * <input type="email" />
+         * <input type="text" class="email" />
+         */
         ['[type="email"],.email', 'email', function (value, element, cb) {
             var valid = isOptional(element, value) ||
                 yafov.defaults.patternLibrary.email.test(value);
             cb(valid);
         }],
+        /*
+         * value must be a valid tel number
+         * <input type="tel" />
+         * <input type="text" class="tel" />
+         */
         ['[type="tel"],.tel', 'tel', function (value, element, cb) {
             var valid = isOptional(element, value) ||
                 yafov.defaults.patternLibrary.phone.test(value);
             cb(valid);
         }],
+        /*
+         * value must contain only numeric chars
+         * <input type="text" class="numeric" />
+         */
         ['[type="number"],.number', 'number', function (value, element, cb) {
             // +null returns 0
             var valid = isOptional(element, value) || value !== null && !isNaN(+value);
             cb(valid);
         }],
+        /*
+         * Value must be equal or less
+         * max validator: <input type="text" max="5" ...
+         */
         ['[max],.max', 'max', function (value, element, cb) {
             validateWith(element, 'number', value, function (valid) {
                 // +null returns 0
@@ -431,6 +483,10 @@
                 cb(valid);
             });
         }],
+        /*
+         * Value must be equal or more
+         * min validator: <input type="text" min="5" ...
+         */
         ['[min],.min', 'min', function (value, element, cb) {
             validateWith(element, 'number', value, function (valid) {
                 var optional = isOptional(element, value),
@@ -448,8 +504,13 @@
             });
 
         }],
-        // hovewer min and max will validate it
+        /*
+         * Value must be equal or less then max and more or equal then min
+         * range validator: <input type="text" min="3" max="5" ...
+         */
         ['[range],.range', 'range', function (value, element, cb) {
+            // we can return true, because the min and max validator will say
+            // if something is wrong
             cb(true);
 
             /*
@@ -469,11 +530,19 @@
             }
             */
         }],
+        /*
+         * value must contain only alpha chars
+         * <input type="text" class="alpha" />
+         */
         ['.alpha', 'alpha', function (value, element, cb) {
             var valid = isOptional(element, value) ||
                         yafov.defaults.patternLibrary.alpha.test(value);
             cb(valid);
         }],
+        /*
+         * value must contain only alphanumeric chars
+         * <input type="text" class="alphanumeric" />
+         */
         ['.alphanumeric', 'alphanumeric', function (value, element, cb) {
             var valid = isOptional(element, value) ||
                     yafov.defaults.patternLibrary.alphanumeric.test(value);
