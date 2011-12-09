@@ -1,0 +1,231 @@
+/*
+Copyright (c) 2011, Yahoo! Inc. All rights reserved.
+Code licensed under the BSD License:
+http://developer.yahoo.com/yui/license.html
+version: 2.9.0
+*/
+/**
+ * YUI Reset
+ * @module reset
+ * @namespace
+ * @requires 
+ */
+html {
+	color: #000;
+	background: #FFF;
+}
+
+body,
+div,
+dl,
+dt,
+dd,
+ul,
+ol,
+li,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+pre,
+code,
+form,
+fieldset,
+legend,
+input,
+button,
+textarea,
+select,
+p,
+blockquote,
+th,
+td {
+	margin: 0;
+	padding: 0;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+fieldset,
+img {
+	border: 0;
+}
+
+address,
+button,
+caption,
+cite,
+code,
+dfn,
+em,
+input,
+optgroup,
+option,
+select,
+strong,
+textarea,
+th,
+var {
+    font:inherit;
+}
+
+del,
+ins {
+	text-decoration: none;
+}
+
+li {
+	list-style: none;
+}
+
+caption,
+th {
+	text-align: left;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-size: 100%;
+	font-weight: normal;
+}
+
+q:before,
+q:after {
+	content: '';
+}
+
+abbr,
+acronym {
+	border: 0;
+	font-variant: normal;
+}
+
+sup {
+	vertical-align: baseline;
+}
+
+sub {
+	vertical-align: baseline;
+}
+
+/*because legend doesn't inherit in IE */
+legend {
+	color: #000;
+}
+
+/* MY STUFF! */
+
+body {
+    background: #EDEDED url('data:image/gif;base64,R0lGODlhCAAIAJEAAMzMzP///////wAAACH5BAEHAAIALAAAAAAIAAgAAAINhG4nudroGJBRsYcxKAA7');
+    font-family: sans-serif;
+    font-size: 13px;
+    padding-bottom: 1em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+
+h1 {
+  background: #333;
+  color: #eee;
+  font-size: 16px;
+  padding: 13px;
+}
+
+h2 {
+  background: #89B020;
+  color: #fff;
+  padding: 13px;
+  font-size: 18px;
+}
+
+a {
+  color: #89B020;
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+fieldset {
+  border: 1px solid #999;
+  padding: 1em;
+}
+
+label.error {
+  color: red;
+  font-size: 11px;
+}
+
+input, button {
+  border: 2px solid #999;
+  padding: 2px;
+}
+
+input[type="submit"],
+input[type="button"],
+button {
+  border-width: 1px;
+}
+
+form {
+  padding: 1em;
+}
+
+form > fieldset > .row  {
+  margin-bottom: 1em;
+}
+
+.node ul {
+  padding: 0 1em 1em 2em;
+}
+ul > li {
+  list-style-type: disc;
+  line-height: 2em;
+}
+
+#Page {
+  background: #fff;
+  width: 800px;
+  margin: auto;
+}
+
+#Messages {
+  display: none;
+}
+#Messages.hasMessage {
+  background: #eee;
+  border: 1px solid #666;
+  display: block;
+  margin: 10px 0;
+  padding: 5px;
+}
+
+input.error {
+  border: 2px solid #f00;
+}
+
+input.valid {
+  border: 2px solid #89B020;
+}
+
+.node {
+  padding: 1em;
+  margin-bottom: 1em;
+}
