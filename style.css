@@ -224,11 +224,15 @@ ul > li {
 }
 
 input.error {
-  border: 2px solid #f00;
+  border-color: #f00;
 }
 
 input.valid {
-  border: 2px solid #89B020;
+  border-color: #89B020;
+}
+
+input.load {
+  border-color: #208AB0;
 }
 
 .node {
