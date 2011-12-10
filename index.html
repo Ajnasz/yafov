@@ -125,84 +125,14 @@
       </form>
       <h2 id="DemoCode">Demo code</h2>
       <div class="node vimhtml">
-<pre>
-<span class="lnr"> 1 </span>$(document).ready(<span class="Function">function</span> () {
-<span class="lnr"> 2 </span><span class="Comment">    // add custom method</span>
-<span class="lnr"> 3 </span>    $.yafov.addMethod(<span class="String">'[type=&quot;tel&quot;]'</span>, <span class="String">'telfoobar'</span>, <span class="Function">function</span> (value, element, cb) {
-<span class="lnr"> 4 </span>        $(element).addClass(<span class="String">'load'</span>);
-<span class="lnr"> 5 </span><span class="Comment">        // imagine that this is an ajax call, and the function is the</span>
-<span class="lnr"> 6 </span><span class="Comment">        // called when the request was success</span>
-<span class="lnr"> 7 </span>        setTimeout(<span class="Function">function</span> () {
-<span class="lnr"> 8 </span>            <span class="Type">var</span> isValid = value !== <span class="String">'123'</span>;
-<span class="lnr"> 9 </span>            cb(isValid);
-<span class="lnr">10 </span>            $(element).removeClass(<span class="String">'load'</span>);
-<span class="lnr">11 </span>        }, <span class="Number">1000</span>);
-<span class="lnr">12 </span>    });
-<span class="lnr">13 </span>
-<span class="lnr">14 </span><span class="Comment">    // Initialize the validator</span>
-<span class="lnr">15 </span>    <span class="Type">var</span> validator = $(<span class="String">'#NewTypes'</span>).yafov();
-<span class="lnr">16 </span>
-<span class="lnr">17 </span><span class="Comment">    // Listen to invalidfound event and show error</span>
-<span class="lnr">18 </span>    validator.bind(<span class="String">'invalidfound'</span>, <span class="Function">function</span> (e, error) {
-<span class="lnr">19 </span>        <span class="Type">var</span> field = $(error.field);
-<span class="lnr">20 </span>        <span class="Type">var</span> fieldId = field.attr(<span class="String">'id'</span>);
-<span class="lnr">21 </span>
-<span class="lnr">22 </span><span class="Comment">        // default error message</span>
-<span class="lnr">23 </span>        <span class="Type">var</span> msg = <span class="String">'Error found: '</span> + error.name;
-<span class="lnr">24 </span>
-<span class="lnr">25 </span><span class="Comment">        // checking the name of the validation result to find out what was the error</span>
-<span class="lnr">26 </span>        <span class="Statement">switch</span> (error.name) {
-<span class="lnr">27 </span>        <span class="Statement">case</span> <span class="String">'required'</span>:
-<span class="lnr">28 </span>            msg = <span class="String">'The field is required.'</span>;
-<span class="lnr">29 </span>            <span class="Statement">break</span>;
-<span class="lnr">30 </span>        <span class="Statement">case</span> <span class="String">'number'</span>:
-<span class="lnr">31 </span>            msg = <span class="String">'The value must be a number.'</span>;
-<span class="lnr">32 </span>            <span class="Statement">break</span>;
-<span class="lnr">33 </span>        <span class="Statement">case</span> <span class="String">'email'</span>:
-<span class="lnr">34 </span>            msg = <span class="String">'Please enter a valid email address.'</span>;
-<span class="lnr">35 </span>            <span class="Statement">break</span>;
-<span class="lnr">36 </span>        <span class="Statement">case</span> <span class="String">'url'</span>:
-<span class="lnr">37 </span>            msg = <span class="String">'Please enter a valid url.'</span>;
-<span class="lnr">38 </span>            <span class="Statement">break</span>;
-<span class="lnr">39 </span>        }
-<span class="lnr">40 </span>        field.addClass(<span class="String">'error'</span>).removeClass(<span class="String">'valid'</span>);
-<span class="lnr">41 </span>        field.parent().find(<span class="String">'label.error'</span>).remove().end()
-<span class="lnr">42 </span>        .append($(<span class="String">'&lt;label class=&quot;error&quot;'</span> + (fieldId ? <span class="String">' for=&quot;'</span> + fieldId + <span class="String">'&quot;'</span> : <span class="String">''</span>) + <span class="String">'&gt;'</span> + msg + <span class="String">'&lt;/label&gt;'</span>));
-<span class="lnr">43 </span>    });
-<span class="lnr">44 </span>
-<span class="lnr">45 </span><span class="Comment">    // Listen to validfound event and remove the error message if needed</span>
-<span class="lnr">46 </span>    validator.bind(<span class="String">'validfound'</span>, <span class="Function">function</span> (e, error, element) {
-<span class="lnr">47 </span>        <span class="Type">var</span> field = $(error.field);
-<span class="lnr">48 </span>        field.removeClass(<span class="String">'error'</span>).addClass(<span class="String">'valid'</span>);
-<span class="lnr">49 </span>        field.parent().find(<span class="String">'label.error'</span>).remove();
-<span class="lnr">50 </span>    });
-<span class="lnr">51 </span>
-<span class="lnr">52 </span><span class="Comment">    // Listen to formvalid event and submit the form</span>
-<span class="lnr">53 </span>    validator.bind(<span class="String">'formvalid'</span>, <span class="Function">function</span> (e, args) {
-<span class="lnr">54 </span><span class="Comment">        // this.submit();</span>
-<span class="lnr">55 </span>    });
-<span class="lnr">56 </span>
-<span class="lnr">57 </span><span class="Comment">    // Listen to forminvalid and do nothing now :) You may wan't to log the issues</span>
-<span class="lnr">58 </span>    validator.bind(<span class="String">'forminvalid'</span>, <span class="Function">function</span> (e, args) {
-<span class="lnr">59 </span>        console.log(<span class="String">'form invalid'</span>)
-<span class="lnr">60 </span>    });
-<span class="lnr">61 </span>
-<span class="lnr">62 </span><span class="Comment">    // When user clicks on #TelValidate button show a message in the #Messages div</span>
-<span class="lnr">63 </span>    $(<span class="String">'#TelValidate'</span>).<span class="PreProc">click</span>(<span class="Function">function</span> () {
-<span class="lnr">64 </span>        $.yafov.validateWith($(<span class="String">'#telfield'</span>), <span class="String">'required'</span>, <span class="Function">function</span> (isValid) {
-<span class="lnr">65 </span>            $(<span class="String">'#Messages'</span>).text(isValid ? <span class="String">'Tel field is valid'</span> : <span class="String">'Tel field is invalid'</span>).addClass(<span class="String">'hasMessage'</span>);
-<span class="lnr">66 </span>        });
-<span class="lnr">67 </span>    });
-<span class="lnr">68 </span>  });
-<span class="lnr">69 </span>
-</pre>
+        <script src="https://gist.github.com/1455919.js"> </script>
       </div>
     </div>
 		<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
 		<script type="text/javascript" src="jquery.yafov.js"></script>
 
-		<script type="text/javascript">
-		$(document).ready(function () {
+    <script type="text/javascript">
+    $(document).ready(function () {
         // add custom method
         $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
             $(element).addClass('load');
@@ -265,13 +195,12 @@
 
         // When user clicks on #TelValidate button show a message in the #Messages div
         $('#TelValidate').click(function () {
-            $.yafov.validateWith($('#telfield'), 'required', function (isValid) {
-                console.log(isValid);
-                $('#Messages').text(isValid ? 'Tel field is valid' : 'Tel field is invalid').addClass('hasMessage');
+            $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
+                $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
             });
         });
       });
-		</script>
+</script>
     <script type="text/javascript">
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-112351-9']);
