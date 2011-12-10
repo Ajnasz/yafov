@@ -154,6 +154,11 @@ h2 {
   font-size: 18px;
 }
 
+h3 {
+  font-size: 16px;
+  margin-top: 2em;
+}
+
 a {
   color: #89B020;
   text-decoration: underline;
@@ -192,9 +197,6 @@ form > fieldset > .row  {
   margin-bottom: 1em;
 }
 
-.node ul {
-  padding: 0 1em 1em 2em;
-}
 ul > li {
   list-style-type: disc;
   line-height: 2em;
@@ -231,5 +233,13 @@ input.valid {
 
 .node {
   padding: 1em;
+  margin-bottom: 1em;
+}
+
+.node ul {
+  padding: 1em 1em 1em 2em;
+}
+
+.node p {
   margin-bottom: 1em;
 }
