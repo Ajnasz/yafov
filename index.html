@@ -101,18 +101,28 @@
             <input type="range" id="RangeTest" min="5" max="10" />
           </div>
           <div class="row">
-            <label for="RadioTest1">Radio1</label>
+            <input type="checkbox" id="CheckboxTest" required />
+            <label for="CheckboxTest">required checkbox</label>
+          </div>
+          <div class="row">
+          <fieldset>
+            <legend>Group 1</legend>
+            <label for="RadioTest1">Radio 1</label>
             <input type="radio" name="radiotest" id="RadioTest1" value="1" required />
 
             <label for="RadioTest2">Radio2</label>
             <input type="radio" name="radiotest" id="RadioTest2" value="2" required />
+          </fieldset>
           </div>
           <div class="row">
+          <fieldset>
+            <legend>Group 2</legend>
             <label for="Radio2Test1">Radio1</label>
             <input type="radio" name="radio2test" id="Radio2Test1" value="1" required />
 
             <label for="RadioTest2">Radio2</label>
             <input type="radio" name="radio2test" id="Radio2Test2" value="2" required />
+          </fieldset>
           </div>
           <div class="row">
             <label for="DateTest1">Date1</label>
