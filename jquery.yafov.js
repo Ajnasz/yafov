@@ -122,7 +122,7 @@
                  * $(element).is('selector'))
                  * @param Function fn The validator function. The function must handle 3 arguments:
                  * value: the current value of the element: which the
-                 *   $(element).val() except for checboxes and radio fields,
+                 *   $(element).val() except for checboxes,
                  *   because then $(element).is(':checked')
                  * element: the element which needs to be validated (jQuery object)
                  * callback: a callback function what you should call when you
@@ -208,6 +208,7 @@
             cb(isValid, element);
         };
         method = validatorMethods.getByName(name, isGroup);
+
         if (typeof method !== 'undefined') {
             if (isGroup) {
                 element = method.groupCollector(element);
@@ -264,9 +265,7 @@
         validatorItemCb,
         value,
         validate;
-        value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
-                $this.is(':checked') :
-                $this.val();
+        value = ($this.is('[type=checkbox]')) ?  $this.is(':checked') : $this.val();
 
         validate = function () {
             var validator = validatorMethods.get(index, isGroup);
@@ -498,8 +497,8 @@
         * if you already have it, you can pass it here so we don't need to ask for
         * it again
         */
-        validateWith: function (element, name, cb, value, isGroup) {
-            validateWith(element, name, cb, value, isGroup);
+        validateWith: function (element, name, cb, isGroup) {
+            validateWith(element, name, cb, null, isGroup);
         },
         addMethod: function (selector, name, fn) {
             addMethod(selector, name, fn);
