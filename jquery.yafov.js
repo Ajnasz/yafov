@@ -39,7 +39,7 @@
             },
 
             // Setup KB event delegation.
-            kbSelectors: ':input:not(:submit)',
+            kbSelectors: ':input:not(:submit,:button)',
             focusout: true,
             focusin: false,
             change: true,
