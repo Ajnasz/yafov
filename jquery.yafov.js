@@ -122,7 +122,7 @@
                  * $(element).is('selector'))
                  * @param Function fn The validator function. The function must handle 3 arguments:
                  * value: the current value of the element: which the
-                 *   $(element).val() except for checboxes and radio fields,
+                 *   $(element).val() except for checboxes,
                  *   because then $(element).is(':checked')
                  * element: the element which needs to be validated (jQuery object)
                  * callback: a callback function what you should call when you
@@ -264,9 +264,7 @@
         validatorItemCb,
         value,
         validate;
-        value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
-                $this.is(':checked') :
-                $this.val();
+        value = ($this.is('[type=checkbox]')) ?  $this.is(':checked') : $this.val();
 
         validate = function () {
             var validator = validatorMethods.get(index, isGroup);
