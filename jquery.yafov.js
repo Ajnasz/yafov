@@ -192,7 +192,7 @@
     /**
      * @param HTMLElement element A input or textarea or select which will be validated
      * @param String name The validator name, defines which validator needs to be used
-     * @param String value Optional The current value of the element. Don't
+     * @param String value The current value of the element. Don't
      * need to pass the value, because we will get it if it's not a string, but
      * if you already have it, you can pass it here so we don't need to ask for
      * it again
@@ -200,17 +200,10 @@
      * fourth argument must be the callback. It will receive one argument,
      * which will be a boolean: true if the field is valid, false if not
      */
-    validateWith = function validateWith(element, name) {
+    validateWith = function validateWith(element, name, cb, value, isGroup) {
         var args = arguments,
-            method, cb, value, isGroup, callback;
-        if (typeof args[2] === 'function') {
-            cb = args[2];
-            isGroup = args[3];
-        } else {
-            value = args[2];
-            cb = args[3];
-            isGroup = args[4];
-        }
+            method, callback;
+
         callback = function (isValid) {
             cb(isValid, element);
         };
@@ -256,9 +249,6 @@
         isGroup = isGroupElement(element),
 
         // get the value once, so it gonna be cached
-        value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
-                $this.is(':checked') :
-                $this.val(),
         // length of the validator methods
         vl = validatorMethods.len(isGroup),
         // loop index
@@ -272,14 +262,18 @@
         // method run when a validation finished
         onValidate,
         validatorItemCb,
+        value,
         validate;
+        value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
+                $this.is(':checked') :
+                $this.val();
 
         validate = function () {
             var validator = validatorMethods.get(index, isGroup);
             // check if need to validate
             if (result.isValid && $this.is(validator.selector)) {
                 result.name = validator.name;
-                validateWith($this, validator.name, validatorItemCb, isGroup);
+                validateWith($this, validator.name, validatorItemCb, value, isGroup);
             } else {
                 onValidate();
             }
@@ -369,34 +363,75 @@
                 e.preventDefault();
                 var form = $(this),
                     errors = [],
-                    validated = 0,
+                    groupMethods = validatorMethods.getAll(true),
+                    groupSelectors = $.unique($.map(groupMethods, function (method) {
+                        return method.selector;
+                    })),
                     fields,
+                    groupFields,
+                    fieldsValidated = false,
+                    groupFieldsValidated = false,
                     collectInvalids,
+                    groupFieldsArr,
                     finish;
 
+                // if finished both the simple and group validators formvalid
+                // or forminvalid events gonna be triggered
                 finish = function () {
-                    if (errors.length < 1) {
-                        errors = null;
-                        form.trigger('formvalid');
-                    } else {
-                        form.trigger('forminvalid', {errors: errors});
+                    if (fieldsValidated && groupFieldsValidated) {
+                        if (errors.length < 1) {
+                            errors = null;
+                            form.trigger('formvalid');
+                        } else {
+                            form.trigger('forminvalid', {errors: errors});
+                        }
                     }
                 };
-                collectInvalids = function () {
-                    methods.validate(this, function (result) {
-                        if (result.isValid !== true) {
-                            errors.push(result);
-                        }
-                        validated += 1;
-                        if (validated >= fields.length) {
-                            finish();
-                        }
-                    });
+                collectInvalids = function(fields, group) {
+                    var validated = 0;
+                    return function () {
+                        methods.validate(this, function (result) {
+                            if (result.isValid !== true) {
+                                errors.push(result);
+                            }
+                            validated += 1;
+                            if (validated >= fields.length) {
+                                if (group) {
+                                    groupFieldsValidated = true;
+                                } else {
+                                  fieldsValidated = true;
+                                }
+                                finish();
+                            }
+                        });
+                    }
                 };
                 fields = form.find(settings.kbSelectors + ',' +
                   settings.mSelectors + ',' +
-                  settings.activeClassSelector);
-                fields.each(collectInvalids);
+                  settings.activeClassSelector).not(groupSelectors.join(','));
+                fields.each(collectInvalids(fields, false));
+
+                // here comes the slow part
+                // first we search for all elements which are belongs to a group validator
+                groupFields = form.find(groupSelectors.join(','));
+                groupFieldsArr = [];
+                // then we go through all of the found elements
+                // and keep only one element from each group
+                // So we one group will be validated only once
+                //
+                // The best would be if it would be possible to find only the
+                // first element for each group by the first time
+                // But that would require to make the groupCollector too
+                // complex (which isn't so simple already)
+                groupFields.each(function (gfIndex, field) {
+                    $.each(groupMethods, function (gmIndex, method) {
+                        var fields = method.groupCollector(field);
+                        if (fields.length > 0) {
+                          groupFieldsArr.push(method.groupCollector(field)[0]);
+                        }
+                    });
+                });
+                $.each($.unique(groupFieldsArr), collectInvalids(groupFieldsArr, true));
             });
 
             return this.each(function () {
@@ -455,19 +490,22 @@
         /**
         * @param HTMLElement element A input or textarea or select which will be validated
         * @param String name The validator name, defines which validator needs to be used
+        * @param Function cb Callback function. This is NOT optional. The third or
+        * fourth argument must be the callback. It will receive one argument,
+        * which will be a boolean: true if the field is valid, false if not
         * @param String value Optional The current value of the element. Don't
         * need to pass the value, because we will get it if it's not a string, but
         * if you already have it, you can pass it here so we don't need to ask for
         * it again
-        * @param Function cb Callback function. This is NOT optional. The third or
-        * fourth argument must be the callback. It will receive one argument,
-        * which will be a boolean: true if the field is valid, false if not
         */
-        validateWith: function (element, name, value, cb) {
-            validateWith(element, name, value, cb);
+        validateWith: function (element, name, cb, value, isGroup) {
+            validateWith(element, name, cb, value, isGroup);
         },
         addMethod: function (selector, name, fn) {
             addMethod(selector, name, fn);
+        },
+        addGroupMethod: function (selector, name, fn, groupCollector) {
+            addGroupMethod(selector, name, fn, groupCollector);
         }
     };
 
@@ -549,15 +587,15 @@
         ['[type="range"],.range', 'range', function (value, element, cb) {
             var optional = isOptional(element, value);
             if (!optional) {
-                validateWith(element, 'min', value, function (minValid) {
+                validateWith(element, 'min', function (minValid) {
                     if (minValid) {
-                        validateWith(element, 'max', value, function (maxValid) {
+                        validateWith(element, 'max', function (maxValid) {
                             cb(minValid && maxValid);
-                        });
+                        }, value, false);
                     } else {
                         cb(minValid);
                     }
-                });
+                }, value, false);
             } else {
                 cb(true);
             }
@@ -567,7 +605,7 @@
          * max validator: <input type="text" max="5" ...
          */
         ['[max],.max', 'max', function (value, element, cb) {
-            validateWith(element, 'number', value, function (valid) {
+            validateWith(element, 'number', function (valid) {
                 // +null returns 0
                 var optional = isOptional(element, value),
                     maxVal;
@@ -580,14 +618,14 @@
                     valid = +maxVal >= +value && valid;
                 }
                 cb(valid);
-            });
+            }, value, false);
         }],
         /*
          * Value must be equal or more
          * min validator: <input type="text" min="5" ...
          */
         ['[min],.min', 'min', function (value, element, cb) {
-            validateWith(element, 'number', value, function (valid) {
+            validateWith(element, 'number', function (valid) {
                 var optional = isOptional(element, value),
                     minVal;
 
@@ -600,7 +638,7 @@
                     valid = +minVal <= +value && valid;
                 }
                 cb(valid);
-            });
+            }, value, false);
 
         }],
         /*
@@ -632,7 +670,7 @@
          */
         [
             'input[type="radio"][required],input[type="radio"].required',
-            'requiredradio',
+            'required',
             function requiredGroupValiadator(value, element, cb) {
                 var valid = element.filter(':checked').length > 0;
                 cb(valid);
