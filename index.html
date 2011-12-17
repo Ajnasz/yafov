@@ -140,21 +140,25 @@
 		<script type="text/javascript" src="jquery.yafov.js"></script>
 
     <script type="text/javascript">
-    $(document).ready(function () {
-      // add custom method
-      $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
-          $(element).addClass('load');
-          // imagine that this is an ajax call, and the function is the
-          // called when the request was success
-          setTimeout(function () {
-              var isValid = value !== '123';
-              cb(isValid);
-              $(element).removeClass('load');
-          }, 1000);
-      });
-      $.yafov.addGroupMethod(
+
+$(document).ready(function () {
+    // add custom method
+    $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
+        $(element).addClass('load');
+        // imagine that this is an ajax call, and the function is the
+        // called when the request was success
+        setTimeout(function () {
+            var isValid = value !== '123';
+            cb(isValid);
+            $(element).removeClass('load');
+        }, 1000);
+    });
+    // add custom group method
+    $.yafov.addGroupMethod(
         '.datetest',
         'datetest',
+        // that method will do the validation
+        // the element variable will contain all elements of the group
         function datetestGroupValiadator(value, element, cb) {
             var valid = true;
             element.each(function () {
@@ -173,63 +177,66 @@
 
             elements = form.find('.datetest');
             return elements;
+        }
+    );
+
+    // Initialize the validator
+    var validator = $('#NewTypes').yafov();
+
+    // Listen to invalidfound event and show error
+    validator.bind('invalidfound', function (e, error) {
+        var field = $(error.field);
+        var fieldId = field.attr('id');
+
+        // default error message
+        var msg = 'Error found: ' + error.name;
+
+        // checking the name of the validation result to find out what was the error
+        switch (error.name) {
+        case 'required':
+            msg = 'The field is required.';
+            break;
+        case 'number':
+            msg = 'The value must be a number.';
+            break;
+        case 'email':
+            msg = 'Please enter a valid email address.';
+            break;
+        case 'url':
+            msg = 'Please enter a valid url.';
+            break;
+        }
+        field.addClass('error').removeClass('valid');
+        var label = $('<label />');
+        label.addClass('error').attr('for', fieldId).text(msg);
+        field.parent().find('label.error').remove().end()
+        .append(label);
+    });
+
+    // Listen to validfound event and remove the error message if needed
+    validator.bind('validfound', function (e, error, element) {
+        var field = $(error.field);
+        field.removeClass('error').addClass('valid');
+        field.parent().find('label.error').remove();
+    });
+
+    // Listen to formvalid event and submit the form
+    validator.bind('formvalid', function (e, args) {
+        // this.submit();
+    });
+
+    // Listen to forminvalid and do nothing now :) You may wan't to log the issues
+    validator.bind('forminvalid', function (e, args) {
+        console.log('form invalid')
+    });
+
+    // When user clicks on #TelValidate button show a message in the #Messages div
+    $('#TelValidate').click(function () {
+        $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
+            $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
         });
-
-        // Initialize the validator
-        var validator = $('#NewTypes').yafov();
-
-        // Listen to invalidfound event and show error
-        validator.bind('invalidfound', function (e, error) {
-            var field = $(error.field);
-            var fieldId = field.attr('id');
-
-            // default error message
-            var msg = 'Error found: ' + error.name;
-
-            // checking the name of the validation result to find out what was the error
-            switch (error.name) {
-            case 'required':
-                msg = 'The field is required.';
-                break;
-            case 'number':
-                msg = 'The value must be a number.';
-                break;
-            case 'email':
-                msg = 'Please enter a valid email address.';
-                break;
-            case 'url':
-                msg = 'Please enter a valid url.';
-                break;
-            }
-            field.addClass('error').removeClass('valid');
-            field.parent().find('label.error').remove().end()
-            .append($('<label class="error"' + (fieldId ? ' for="' + fieldId + '"' : '') + '>' + msg + '</label>'));
-        });
-
-        // Listen to validfound event and remove the error message if needed
-        validator.bind('validfound', function (e, error, element) {
-            var field = $(error.field);
-            field.removeClass('error').addClass('valid');
-            field.parent().find('label.error').remove();
-        });
-
-        // Listen to formvalid event and submit the form
-        validator.bind('formvalid', function (e, args) {
-            // this.submit();
-        });
-
-        // Listen to forminvalid and do nothing now :) You may wan't to log the issues
-        validator.bind('forminvalid', function (e, args) {
-            console.log('form invalid')
-        });
-
-        // When user clicks on #TelValidate button show a message in the #Messages div
-        $('#TelValidate').click(function () {
-            $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
-                $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
-            });
-        });
-      });
+    });
+});
     </script>
     <script type="text/javascript">
       var _gaq = _gaq || [];
