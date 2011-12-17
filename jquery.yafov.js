@@ -74,8 +74,10 @@
 
     validatorMethods = (function () {
         var methods = [],
+            groupMethods = [],
             /* an object to store the method indexes by their name */
             methodsByName = {},
+            groupMethodsByName = {},
             interf = {
                 /**
                  * When we add a new validator a name must be given. If a
@@ -110,32 +112,69 @@
                     methods[index] = item;
                 },
                 /**
-                 * method to get the validator object's index by it's name
-                 * @param String the name of the validator
+                 * When we add a new validator a name must be given. If a
+                 * validator already exists with the same name, it will be
+                 * overwritten
+                 * @param String name the name of the validator, eg.: required, number
+                 * @param jQuerySelectorString selector The selector of the
+                 * element what should match. Only those elements will be
+                 * validated which are matching to this selector (see
+                 * $(element).is('selector'))
+                 * @param Function fn The validator function. The function must handle 3 arguments:
+                 * value: the current value of the element: which the
+                 *   $(element).val() except for checboxes and radio fields,
+                 *   because then $(element).is(':checked')
+                 * element: the element which needs to be validated (jQuery object)
+                 * callback: a callback function what you should call when you
+                 *   figured out that the element is valid or not. You must
+                 *   pass the result as a boolean. It must bee true if the
+                 *   field is valid or false if it's invalid
                  */
-                indexByName: function (name) {
-                    var index = methodsByName[name];
+                addGroup: function (selector, name, fn, groupCollector) {
+                    var existIndex, index, item;
+
+                    existIndex = interf.indexByName(name, true);
+                    index = existIndex > -1 ? existIndex : interf.len(true);
+                    item = {
+                        selector: selector,
+                        fn: fn,
+                        name: name,
+                        groupCollector: groupCollector
+                    };
+                    groupMethodsByName[name] = index;
+                    groupMethods[index] = item;
+                },
+                /**
+                 * method to get the validator object's index by it's name
+                 * @param String name the name of the validator
+                 * @param Boolean isGroup if true, it will search in group methods
+                 */
+                indexByName: function (name, isGroup) {
+                    var index = isGroup ? groupMethodsByName[name] : methodsByName[name];
                     return typeof index !== 'undefined' ? index : -1;
                 },
                 /**
                  * method to get the validator object by it's index
                  * @param Int the index of the validator
                  */
-                get: function (index) {
-                    return methods[index];
+                get: function (index, isGroup) {
+                    return interf.getAll(isGroup)[index];
+                },
+                getAll: function (isGroup) {
+                    return isGroup ? groupMethods : methods;
                 },
                 /**
                  * method to get the validator object by it's name
                  * @param String the name of the validator
                  */
-                getByName: function (name) {
-                    return interf.get(interf.indexByName(name));
+                getByName: function (name, isGroup) {
+                    return interf.get(interf.indexByName(name, isGroup), isGroup);
                 },
                 /**
                  * Method to get the number of the validators have added
                  */
-                len: function () {
-                    return methods.length;
+                len: function (isGroup) {
+                    return isGroup ? groupMethods.length : methods.length;
                 }
             };
         // finally return the interface
@@ -144,6 +183,10 @@
 
     addMethod = function (selector, name, fn) {
         validatorMethods.add(selector, name, fn);
+    },
+
+    addGroupMethod = function (selector, name, fn, groupCollector) {
+        validatorMethods.addGroup(selector, name, fn, groupCollector);
     },
 
     /**
@@ -159,24 +202,33 @@
      */
     validateWith = function validateWith(element, name) {
         var args = arguments,
-            method, cb, value, $this;
+            method, cb, value, isGroup, callback;
         if (typeof args[2] === 'function') {
             cb = args[2];
+            isGroup = args[3];
         } else {
             value = args[2];
             cb = args[3];
+            isGroup = args[4];
         }
-        method = validatorMethods.getByName(name);
+        callback = function (isValid) {
+            cb(isValid, element);
+        };
+        method = validatorMethods.getByName(name, isGroup);
         if (typeof method !== 'undefined') {
-            $this = $(element);
-            if (typeof value !== 'string') {
-                value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
-                            $this.is(':checked') :
-                            $this.val();
+            if (isGroup) {
+                element = method.groupCollector(element);
+            } else {
+                element = $(element);
             }
-            method.fn(value, $this, cb);
+            if (typeof value !== 'string' && !isGroup) {
+                value = (element) ?
+                            element.is(':checked') :
+                            element.val();
+            }
+            method.fn(value, element, callback);
         } else {
-            cb(true);
+            callback(true);
         }
     },
 
@@ -184,22 +236,38 @@
         return !element.is('[required],.required') && value === '';
     },
 
+    /* method which finds out if an element belongs to a group */
+    isGroupElement = function (element) {
+        var groupValidators = validatorMethods.getAll(true),
+            gl = groupValidators.length,
+            matching = false,
+            elem = $(element),
+            i;
+
+        for (i = 0; !matching && i < gl; i += 1) {
+            matching = elem.is(groupValidators[i].selector);
+        }
+        return matching;
+    },
+
     validateElement = function (element, cb) {
         var $this = $(element),
+
+        isGroup = isGroupElement(element),
 
         // get the value once, so it gonna be cached
         value = ($this.is('[type=checkbox]') || $this.is('[type=radio]')) ?
                 $this.is(':checked') :
                 $this.val(),
         // length of the validator methods
-        vl = validatorMethods.len(),
+        vl = validatorMethods.len(isGroup),
         // loop index
         index = 0,
         // default result object
         result = {
             isValid: true,
             name: '',
-            field: $this[0]
+            field: $this
         },
         // method run when a validation finished
         onValidate,
@@ -207,11 +275,11 @@
         validate;
 
         validate = function () {
-            var validator = validatorMethods.get(index);
+            var validator = validatorMethods.get(index, isGroup);
             // check if need to validate
             if (result.isValid && $this.is(validator.selector)) {
                 result.name = validator.name;
-                validateWith($this, validator.name, validatorItemCb);
+                validateWith($this, validator.name, validatorItemCb, isGroup);
             } else {
                 onValidate();
             }
@@ -224,9 +292,14 @@
                 cb(result);
             }
         };
-        validatorItemCb = function (valid) {
+        // the elem gonna be all the elements which were validated by this validatior action
+        // normally it's the same what we pass ($this) to the validateWith
+        // function, but when it's a group validator then all of the elements
+        // will be listed here
+        validatorItemCb = function (valid, validatedElements) {
             // update result
             result.isValid = valid;
+            result.field = validatedElements;
             // if not valid make sure we don't run the next validator
             if (!valid) {
                 index = vl - 1;
@@ -550,5 +623,34 @@
         }]
     ]).each(function () {
         addMethod.apply(null, this);
+    });
+    $([
+        /*
+         * value shouldn't be empty
+         * <input type="text" required />
+         * <input type="text" class="required" />
+         */
+        [
+            'input[type="radio"][required],input[type="radio"].required',
+            'requiredradio',
+            function requiredGroupValiadator(value, element, cb) {
+                var valid = element.filter(':checked').length > 0;
+                cb(valid);
+            },
+            /*
+             * collects all elements which belongs to the group
+             * one parameter, which is the reference element
+             */
+            function requiredRadioGroupCollector(element) {
+                var elem = $(element),
+                    form = elem.closest('form'),
+                    elements;
+
+                elements = form.find('input[type="radio"][name="' + elem.attr('name') + '"]');
+                return elements;
+            }
+        ]
+    ]).each(function () {
+        addGroupMethod.apply(null, this);
     });
 }(jQuery));
