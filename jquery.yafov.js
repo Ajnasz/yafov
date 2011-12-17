@@ -294,27 +294,29 @@
 
             this.submit(function (e) {
                 e.preventDefault();
-                var valid = true,
-                    form = $(this),
+                var form = $(this),
                     errors = [],
                     validated = 0,
                     fields,
-                    collectInvalids;
+                    collectInvalids,
+                    finish;
 
+                finish = function () {
+                    if (errors.length < 1) {
+                        errors = null;
+                        form.trigger('formvalid');
+                    } else {
+                        form.trigger('forminvalid', {errors: errors});
+                    }
+                };
                 collectInvalids = function () {
                     methods.validate(this, function (result) {
-                        valid = valid && result.isValid;
                         if (result.isValid !== true) {
                             errors.push(result);
                         }
                         validated += 1;
                         if (validated >= fields.length) {
-                            if (valid) {
-                                errors = null;
-                                form.trigger('formvalid');
-                            } else {
-                                form.trigger('forminvalid', {errors: errors});
-                            }
+                            finish();
                         }
                     });
                 };
