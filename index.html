@@ -1,33 +1,44 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>yafov - Yet Another Form Validator plugin for jQuery</title>
     <link rel="stylesheet" href="style.css" />
-    <style type="text/css">
-    <!--
-    .vimhtml pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #f8f8ff; }
-    .vimhtml pre { font-family: monospace; color: #000000; background-color: #f8f8ff; }
-    .vimhtml .lnr { color: #959595; background-color: #ececec; font-weight: bold; }
-    .vimhtml .PreProc { color: #a0a0a0; font-weight: bold; }
-    .vimhtml .Number { color: #1c9898; }
-    .vimhtml .Type { color: #445588; font-weight: bold; }
-    .vimhtml .String { color: #d81745; }
-    .vimhtml .Comment { color: #999988; }
-    .vimhtml .Conceal { color: #d3d3d3; background-color: #a9a9a9; }
-    -->
-    </style>
 	</head>
 	<body>
-
+    <a href="https://github.com/Ajnasz/yafov"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
     <h1>Demo page for yafov - Yet Another Form Validator jQuery plugin</h1>
     <div id="Page">
       <h2>About the plugin</h2>
       <div class="node">
+
+        <div id="download">
+          <a href="https://github.com/Ajnasz/yafov/zipball/master">
+          <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+          <a href="https://github.com/Ajnasz/yafov/tarball/master">
+          <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+        </div>
+        <p>The point of this plugin is to create an event based validator which
+        does only the validation. So it doesn't want to try to figure out what
+        should be the error message and where and how do I want to show it.</p>
+        <h3>Why events?</h3>
+        <p>Because that's the most felxible way. Events are make possible to
+        define AJAX based validators.<br />
+        For example on a registration form, if you wan't to check if a username
+        is free, you must ask the server using an ajax call. Since it's an
+        asynchronous call, you need to handle all validations
+        asynchronously.</p>
+        <h3>Why are there no pre-defined messages and ways to show the errors?</h3>
+        <p>Because every site is different, so trying to find an ultimate way
+        to show error messages is a really bad idea. I don't know how do you build your forms, I don't know the language of your site, I don't know it's structure of your forms. So the plugin will does only the validation and you can define how, where and what you will show if an error found.</p>
+      </div>
+      <h2 id="Demo">More info, documentation</h2>
+      <div class="node">
         <ul>
+          <li>See the <a href="https://github.com/Ajnasz/yafov/wiki">wiki page</a> for more details.</li>
+          <li>See the <a href="https://github.com/Ajnasz/yafov/wiki/Example">example with comments</a>.</li>
           <li>Check out the <a href="#Demo">demo form</a>.</li>
           <li>Check out the <a href="#DemoCode">code of the demo</a>.</li>
           <li>Download from  <a href="https://github.com/Ajnasz/yafov">Github</a></li>
-          <li>See the <a href="https://github.com/Ajnasz/yafov/wiki">wiki page</a> for more details.</li>
-          <li>See the <a href="https://github.com/Ajnasz/yafov/wiki/Example">example with comments</a>.</li>
         </ul>
       </div>
       <h2 id="Demo">New HTML5 Input Types</h2>
@@ -90,18 +101,28 @@
             <input type="range" id="RangeTest" min="5" max="10" />
           </div>
           <div class="row">
-            <label for="RadioTest1">Radio1</label>
+            <input type="checkbox" id="CheckboxTest" required />
+            <label for="CheckboxTest">required checkbox</label>
+          </div>
+          <div class="row">
+          <fieldset>
+            <legend>Group 1</legend>
+            <label for="RadioTest1">Radio 1</label>
             <input type="radio" name="radiotest" id="RadioTest1" value="1" required />
 
             <label for="RadioTest2">Radio2</label>
             <input type="radio" name="radiotest" id="RadioTest2" value="2" required />
+          </fieldset>
           </div>
           <div class="row">
+          <fieldset>
+            <legend>Group 2</legend>
             <label for="Radio2Test1">Radio1</label>
             <input type="radio" name="radio2test" id="Radio2Test1" value="1" required />
 
             <label for="RadioTest2">Radio2</label>
             <input type="radio" name="radio2test" id="Radio2Test2" value="2" required />
+          </fieldset>
           </div>
           <div class="row">
             <label for="DateTest1">Date1</label>
@@ -122,120 +143,122 @@
       </form>
       <h2 id="DemoCode">Demo code</h2>
       <div class="node vimhtml">
-<pre>
-<span class="lnr"> 1 </span>$(document).ready(<span class="Conceal">𝑓</span> () {
-<span class="lnr"> 2 </span><span class="Comment">    // add a custom method</span>
-<span class="lnr"> 3 </span>    $.yafov.addMethod(<span class="String">'[type=&quot;tel&quot;]'</span>, <span class="String">'telfoobar'</span>, <span class="Conceal">𝑓</span> (value, element, cb) {
-<span class="lnr"> 4 </span>      $(element).addClass(<span class="String">'load'</span>);
-<span class="lnr"> 5 </span>      setTimeout(<span class="Conceal">𝑓</span> () {
-<span class="lnr"> 6 </span>          <span class="Type">var</span> isValid = value !== <span class="String">'123'</span>;
-<span class="lnr"> 7 </span>          cb(isValid);
-<span class="lnr"> 8 </span>          $(element).removeClass(<span class="String">'load'</span>);
-<span class="lnr"> 9 </span>      }, <span class="Number">1000</span>);
-<span class="lnr">10 </span>    });
-<span class="lnr">11 </span>
-<span class="lnr">12 </span><span class="Comment">    // Initialize the validator</span>
-<span class="lnr">13 </span>    <span class="Type">var</span> validator = $(<span class="String">'#NewTypes'</span>).yafov();
-<span class="lnr">14 </span>
-<span class="lnr">15 </span><span class="Comment">    // Listen to invalidfound event and show error</span>
-<span class="lnr">16 </span>    validator.bind(<span class="String">'invalidfound'</span>, <span class="Conceal">𝑓</span> (e, error) {
-<span class="lnr">17 </span>        <span class="Type">var</span> field = $(error.field);
-<span class="lnr">18 </span>        <span class="Type">var</span> fieldId = field.attr(<span class="String">'id'</span>);
-<span class="lnr">19 </span>        <span class="Type">var</span> msg = <span class="String">'Error found: '</span> + error.name;
-<span class="lnr">20 </span>        field.addClass(<span class="String">'error'</span>).removeClass(<span class="String">'valid'</span>);
-<span class="lnr">21 </span>        field.parent().find(<span class="String">'label.error'</span>).remove().end()
-<span class="lnr">22 </span>        .append($(<span class="String">'&lt;label class=&quot;error&quot;'</span> + (fieldId ? <span class="String">' for=&quot;'</span> + fieldId + <span class="String">'&quot;'</span> : <span class="String">''</span>) + <span class="String">'&gt;'</span> + msg + <span class="String">'&lt;/label&gt;'</span>));
-<span class="lnr">23 </span>    });
-<span class="lnr">24 </span>
-<span class="lnr">25 </span><span class="Comment">    // Listen to validfound event and remove the error message if needed</span>
-<span class="lnr">26 </span>    validator.bind(<span class="String">'validfound'</span>, <span class="Conceal">𝑓</span> (e, error, element) {
-<span class="lnr">27 </span>        <span class="Type">var</span> field = $(error.field);
-<span class="lnr">28 </span>        field.removeClass(<span class="String">'error'</span>).addClass(<span class="String">'valid'</span>);
-<span class="lnr">29 </span>        field.parent().find(<span class="String">'label.error'</span>).remove();
-<span class="lnr">30 </span>    });
-<span class="lnr">31 </span>
-<span class="lnr">32 </span><span class="Comment">    // Listen to formvalid event and submit the form</span>
-<span class="lnr">33 </span>    validator.bind(<span class="String">'formvalid'</span>, <span class="Conceal">𝑓</span> (e, args) {
-<span class="lnr">34 </span>        <span class="Type">this</span>.submit();
-<span class="lnr">35 </span>    });
-<span class="lnr">36 </span>
-<span class="lnr">37 </span><span class="Comment">    // Listen to forminvalid</span>
-<span class="lnr">38 </span>    validator.bind(<span class="String">'forminvalid'</span>, <span class="Conceal">𝑓</span> (e, args) {
-<span class="lnr">39 </span>    });
-<span class="lnr">40 </span>
-<span class="lnr">41 </span><span class="Comment">    // When user clicks on #TelValidate button show a message in the #Messages div</span>
-<span class="lnr">42 </span>    $(<span class="String">'#TelValidate'</span>).<span class="PreProc">click</span>(<span class="Conceal">𝑓</span> () {
-<span class="lnr">43 </span>        $.yafov.validateWith($(<span class="String">'#telfield'</span>), <span class="String">'required'</span>, <span class="Conceal">𝑓</span> (isValid) {
-<span class="lnr">44 </span>            $(<span class="String">'#Messages'</span>).text(isValid ? <span class="String">'Tel field is valid'</span> : <span class="String">'Tel field is invalid'</span>).addClass(<span class="String">'hasMessage'</span>);
-<span class="lnr">45 </span>        });
-<span class="lnr">46 </span>    });
-<span class="lnr">47 </span>});
-</pre>
+        <script src="https://gist.github.com/1455919.js"> </script>
       </div>
     </div>
 		<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
 		<script type="text/javascript" src="jquery.yafov.js"></script>
 
-		<script type="text/javascript">
-		$(document).ready(function () {
-        $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
-          $(element).addClass('load');
-          setTimeout(function () {
-              var isValid = value !== '123';
-              cb(isValid);
-              $(element).removeClass('load');
-          }, 1000);
-        });
-        $.yafov.addGroupMethod(
-          '.datetest',
-          'datetest',
-          function datetestGroupValiadator(value, element, cb) {
-              var valid = true;
-              element.each(function () {
-                  valid = valid && this.value !== '';
-              });
-              cb(valid);
-          },
-          /*
-            * collects all elements which belongs to the group
-            * one parameter, which is the reference element
-            */
-          function datetestGroupCollector(element) {
-              var elem = $(element),
-                  form = elem.closest('form'),
-                  elements;
+    <script type="text/javascript">
 
-              elements = form.find('.datetest');
-              return elements;
-          });
-      var validator = $('#NewTypes').yafov();
-      validator.bind('invalidfound', function (e, error) {
-          var field = $(error.field);
-          var fieldId = field.attr('id');
-          var msg = 'Error found: ' + error.name;
-          var errorMsg = $('<label />');
-          errorMsg.addClass('error').attr('for', fieldId).text(msg);
-          field.closest('.row').find('label.error').remove().end().append(errorMsg);
-          field.addClass('error').removeClass('valid');
-      });
-      validator.bind('validfound', function (e, error, element) {
-          var field = $(error.field);
-          field.removeClass('error').addClass('valid');
-          field.parent().find('label.error').remove();
-      });
-      validator.bind('formvalid', function (e, args) {
-          console.log('formvalid');
-          // this.submit();
-      });
-      validator.bind('forminvalid', function (e, args) {
-          console.log('forminvalid');
-      });
-      $('#TelValidate').click(function () {
-          $.yafov.validateWith($('#telfield'), 'required', function (isValid) {
-              $('#Messages').text(isValid ? 'Tel field is valid' : 'Tel field is invalid').addClass('hasMessage');
-          });
-      });
-		});
-		</script>
+$(document).ready(function () {
+    // add custom method
+    $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
+        $(element).addClass('load');
+        // imagine that this is an ajax call, and the function is the
+        // called when the request was success
+        setTimeout(function () {
+            var isValid = value !== '123';
+            cb(isValid);
+            $(element).removeClass('load');
+        }, 1000);
+    });
+    // add custom group method
+    $.yafov.addGroupMethod(
+        '.datetest',
+        'datetest',
+        // that method will do the validation
+        // the element variable will contain all elements of the group
+        function datetestGroupValiadator(value, element, cb) {
+            var valid = true;
+            element.each(function () {
+                valid = valid && this.value !== '';
+            });
+            cb(valid);
+        },
+        /*
+          * collects all elements which belongs to the group
+          * one parameter, which is the reference element
+          */
+        function datetestGroupCollector(element) {
+            var elem = $(element),
+                form = elem.closest('form'),
+                elements;
+
+            elements = form.find('.datetest');
+            return elements;
+        }
+    );
+
+    // Initialize the validator
+    var validator = $('#NewTypes').yafov();
+
+    // Listen to invalidfound event and show error
+    validator.bind('invalidfound', function (e, error) {
+        var field = $(error.field);
+        var fieldId = field.attr('id');
+
+        // default error message
+        var msg = 'Error found: ' + error.name;
+
+        // checking the name of the validation result to find out what was the error
+        switch (error.name) {
+        case 'required':
+            msg = 'The field is required.';
+            break;
+        case 'number':
+            msg = 'The value must be a number.';
+            break;
+        case 'email':
+            msg = 'Please enter a valid email address.';
+            break;
+        case 'url':
+            msg = 'Please enter a valid url.';
+            break;
+        }
+        field.addClass('error').removeClass('valid');
+        var label = $('<label />');
+        label.addClass('error').attr('for', fieldId).text(msg);
+        field.parent().find('label.error').remove().end()
+        .append(label);
+    });
+
+    // Listen to validfound event and remove the error message if needed
+    validator.bind('validfound', function (e, error, element) {
+        var field = $(error.field);
+        field.removeClass('error').addClass('valid');
+        field.parent().find('label.error').remove();
+    });
+
+    // Listen to formvalid event and submit the form
+    validator.bind('formvalid', function (e, args) {
+        // this.submit();
+    });
+
+    // Listen to forminvalid and do nothing now :) You may wan't to log the issues
+    validator.bind('forminvalid', function (e, args) {
+        console.log('form invalid')
+    });
+
+    // When user clicks on #TelValidate button show a message in the #Messages div
+    $('#TelValidate').click(function () {
+        $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
+            $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
+        });
+    });
+});
+    </script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-112351-9']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
 	</body>
 </html>
