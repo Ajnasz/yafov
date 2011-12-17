@@ -104,6 +104,7 @@
             <input type="checkbox" id="CheckboxTest" required />
             <label for="CheckboxTest">required checkbox</label>
           </div>
+          <h3>Group validators</h3>
           <div class="row">
           <fieldset>
             <legend>Group 1</legend>
@@ -125,11 +126,14 @@
           </fieldset>
           </div>
           <div class="row">
-            <label for="DateTest1">Date1</label>
-            <input type="text" name="datetest1" id="DateTest1" value="" class="datetest" />
+            <label for="DateTest1">Year:</label>
+            <input type="text" name="datetest1" id="DateTest1" value="" class="datetest year" size="4" />
 
-            <label for="RadioTest2">Date2</label>
-            <input type="text" name="datetest2" id="DateTest2" value="" class="datetest" />
+            <label for="RadioTest2">Month:</label>
+            <input type="text" name="datetest2" id="DateTest2" value="" class="datetest month"  size="2"/>
+
+            <label for="RadioTest2">Day:</label>
+            <input type="text" name="datetest2" id="DateTest2" value="" class="datetest day" size="2" />
           </div>
           <!--
           <div class="row">
@@ -163,17 +167,40 @@ $(document).ready(function () {
             $(element).removeClass('load');
         }, 1000);
     });
-    // add custom group method
+
     $.yafov.addGroupMethod(
         '.datetest',
         'datetest',
         // that method will do the validation
-        // the element variable will contain all elements of the group
-        function datetestGroupValiadator(value, element, cb) {
+        // the elements variable will contain all elements of the group
+        // the elements are collected by the function what you need to pass as
+        // the 4th argument
+        // The value argument here doesn't make too much sense..
+        function datetestGroupValiadator(value, elements, cb) {
             var valid = true;
-            element.each(function () {
-                valid = valid && this.value !== '';
+            // check for the format of the fields, everything should be number
+            // you may wan't to make it more strict, but it's OK for now
+            elements.each(function () {
+                valid = valid && this.value !== '' && !isNaN(+this.value);
             });
+            // if the format is OK, check the actual value
+            if (valid) {
+                // get the values
+                var year = elements.filter('.year').val();
+                var month = elements.filter('.month').val();
+                var day = elements.filter('.day').val();
+
+                // create date objects what we will compare
+                var date = new Date(), now = new Date();
+
+                // set year, month and day
+                date.setFullYear(year);
+                date.setMonth(month - 1);
+                date.setDate(day);
+
+                // compare the dates, if date.getTime() is greater then now.getTime() the entered date should be ok
+                valid = date.getTime() > now.getTime();
+            }
             cb(valid);
         },
         /*
@@ -215,6 +242,9 @@ $(document).ready(function () {
         case 'url':
             msg = 'Please enter a valid url.';
             break;
+        case 'datetest':
+            msg = 'The date must be later than now';
+            break;
         }
         field.addClass('error').removeClass('valid');
         var label = $('<label />');
@@ -233,18 +263,19 @@ $(document).ready(function () {
     // Listen to formvalid event and submit the form
     validator.bind('formvalid', function (e, args) {
         // this.submit();
+        $('#Messages').text('the form is valid').addClass('hasMessage');
     });
 
     // Listen to forminvalid and do nothing now :) You may wan't to log the issues
     validator.bind('forminvalid', function (e, args) {
-        console.log('form invalid')
+        $('#Messages').text('the form is invalid').addClass('hasMessage');
     });
 
     // When user clicks on #TelValidate button show a message in the #Messages div
     $('#TelValidate').click(function () {
-        $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
+        $.yafov.validateWith($('#RadioTest1'), 'required', function (isValid) {
             $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
-        });
+        }, true);
     });
 });
     </script>
