@@ -208,6 +208,7 @@
             cb(isValid, element);
         };
         method = validatorMethods.getByName(name, isGroup);
+
         if (typeof method !== 'undefined') {
             if (isGroup) {
                 element = method.groupCollector(element);
@@ -496,8 +497,8 @@
         * if you already have it, you can pass it here so we don't need to ask for
         * it again
         */
-        validateWith: function (element, name, cb, value, isGroup) {
-            validateWith(element, name, cb, value, isGroup);
+        validateWith: function (element, name, cb, isGroup) {
+            validateWith(element, name, cb, null, isGroup);
         },
         addMethod: function (selector, name, fn) {
             addMethod(selector, name, fn);
