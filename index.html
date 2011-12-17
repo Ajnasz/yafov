@@ -89,6 +89,27 @@
             <label for="RangeTest">range and NOT required: </label><br />
             <input type="range" id="RangeTest" min="5" max="10" />
           </div>
+          <div class="row">
+            <label for="RadioTest1">Radio1</label>
+            <input type="radio" name="radiotest" id="RadioTest1" value="1" required />
+
+            <label for="RadioTest2">Radio2</label>
+            <input type="radio" name="radiotest" id="RadioTest2" value="2" required />
+          </div>
+          <div class="row">
+            <label for="Radio2Test1">Radio1</label>
+            <input type="radio" name="radio2test" id="Radio2Test1" value="1" required />
+
+            <label for="RadioTest2">Radio2</label>
+            <input type="radio" name="radio2test" id="Radio2Test2" value="2" required />
+          </div>
+          <div class="row">
+            <label for="DateTest1">Date1</label>
+            <input type="text" name="datetest1" id="DateTest1" value="" class="datetest" />
+
+            <label for="RadioTest2">Date2</label>
+            <input type="text" name="datetest2" id="DateTest2" value="" class="datetest" />
+          </div>
           <!--
           <div class="row">
             <label for="ColorTest">color: </label><br />
@@ -165,14 +186,37 @@
               $(element).removeClass('load');
           }, 1000);
         });
+        $.yafov.addGroupMethod(
+          '.datetest',
+          'datetest',
+          function datetestGroupValiadator(value, element, cb) {
+              var valid = true;
+              element.each(function () {
+                  valid = valid && this.value !== '';
+              });
+              cb(valid);
+          },
+          /*
+            * collects all elements which belongs to the group
+            * one parameter, which is the reference element
+            */
+          function datetestGroupCollector(element) {
+              var elem = $(element),
+                  form = elem.closest('form'),
+                  elements;
+
+              elements = form.find('.datetest');
+              return elements;
+          });
       var validator = $('#NewTypes').yafov();
       validator.bind('invalidfound', function (e, error) {
           var field = $(error.field);
           var fieldId = field.attr('id');
           var msg = 'Error found: ' + error.name;
+          var errorMsg = $('<label />');
+          errorMsg.addClass('error').attr('for', fieldId).text(msg);
+          field.closest('.row').find('label.error').remove().end().append(errorMsg);
           field.addClass('error').removeClass('valid');
-          field.parent().find('label.error').remove().end()
-          .append($('<label class="error"' + (fieldId ? ' for="' + fieldId + '"' : '') + '>' + msg + '</label>'));
       });
       validator.bind('validfound', function (e, error, element) {
           var field = $(error.field);
@@ -180,9 +224,11 @@
           field.parent().find('label.error').remove();
       });
       validator.bind('formvalid', function (e, args) {
+          console.log('formvalid');
           // this.submit();
       });
       validator.bind('forminvalid', function (e, args) {
+          console.log('forminvalid');
       });
       $('#TelValidate').click(function () {
           $.yafov.validateWith($('#telfield'), 'required', function (isValid) {
