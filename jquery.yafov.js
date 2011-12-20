@@ -386,7 +386,7 @@
                         }
                     }
                 };
-                collectInvalids = function(fields, group) {
+                collectInvalids = function (fields, group) {
                     var validated = 0;
                     return function () {
                         methods.validate(this, function (result) {
@@ -398,7 +398,7 @@
                                 if (group) {
                                     groupFieldsValidated = true;
                                 } else {
-                                  fieldsValidated = true;
+                                    fieldsValidated = true;
                                 }
                                 finish();
                             }
@@ -408,7 +408,12 @@
                 fields = form.find(settings.kbSelectors + ',' +
                   settings.mSelectors + ',' +
                   settings.activeClassSelector).not(groupSelectors.join(','));
-                fields.each(collectInvalids(fields, false));
+                if (fields.length > 0) {
+                    fields.each(collectInvalids(fields, false));
+                } else {
+                    fieldsValidated = true;
+                    finish();
+                }
 
                 // here comes the slow part
                 // first we search for all elements which are belongs to a group validator
@@ -422,14 +427,19 @@
                 // first element for each group by the first time
                 // But that would require to make the groupCollector too
                 // complex (which isn't so simple already)
-                groupFields.each(function (gfIndex, field) {
-                    $.each(groupMethods, function (gmIndex, method) {
-                        var fields = method.groupCollector(field);
-                        if (fields.length > 0) {
-                          groupFieldsArr.push(method.groupCollector(field)[0]);
-                        }
+                if (groupFields.length > 0) {
+                    groupFields.each(function (gfIndex, field) {
+                        $.each(groupMethods, function (gmIndex, method) {
+                            var fields = method.groupCollector(field);
+                            if (fields.length > 0) {
+                                groupFieldsArr.push(method.groupCollector(field)[0]);
+                            }
+                        });
                     });
-                });
+                } else {
+                    groupFieldsValidated = true;
+                    finish();
+                }
                 $.each($.unique(groupFieldsArr), collectInvalids(groupFieldsArr, true));
             });
 
