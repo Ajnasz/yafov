@@ -422,7 +422,7 @@
                 groupFieldsArr = [];
                 // then we go through all of the found elements
                 // and keep only one element from each group
-                // So we one group will be validated only once
+                // So a group will be validated only once
                 //
                 // The best would be if it would be possible to find only the
                 // first element for each group by the first time
@@ -430,10 +430,15 @@
                 // complex (which isn't so simple already)
                 if (groupFields.length > 0) {
                     groupFields.each(function (gfIndex, field) {
+                        // create a jquery object from the field, because in the
+                        // collector probably that will be used and then don't need
+                        // to get an object each time the groupCollector method
+                        // called
+                        var jqField = $(field);
                         $.each(groupMethods, function (gmIndex, method) {
-                            var fields = method.groupCollector(field);
+                            var fields = method.groupCollector(jqField);
                             if (fields.length > 0) {
-                                groupFieldsArr.push(method.groupCollector(field)[0]);
+                                groupFieldsArr.push(fields[0]);
                             }
                         });
                     });
