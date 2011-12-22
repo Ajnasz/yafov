@@ -142,6 +142,7 @@ h5 {
 
 h1 {
   background: #333;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
   color: #eee;
   font-size: 16px;
   padding: 13px;
@@ -152,6 +153,11 @@ h2 {
   color: #fff;
   padding: 13px;
   font-size: 18px;
+}
+
+h3 {
+  font-size: 16px;
+  margin-top: 2em;
 }
 
 a {
@@ -192,9 +198,6 @@ form > fieldset > .row  {
   margin-bottom: 1em;
 }
 
-.node ul {
-  padding: 0 1em 1em 2em;
-}
 ul > li {
   list-style-type: disc;
   line-height: 2em;
@@ -210,22 +213,39 @@ ul > li {
   display: none;
 }
 #Messages.hasMessage {
-  background: #eee;
-  border: 1px solid #666;
+  background: #FFC;
+  border: 1px solid #FFA500;
   display: block;
   margin: 10px 0;
   padding: 5px;
 }
 
+#download {
+    float: right;
+}
+
 input.error {
-  border: 2px solid #f00;
+  border-color: #f00;
 }
 
 input.valid {
-  border: 2px solid #89B020;
+  border-color: #89B020;
+}
+
+input.load {
+  border-color: #208AB0;
+  background-color: #E0F7FF;
 }
 
 .node {
   padding: 1em;
+  margin-bottom: 1em;
+}
+
+.node ul {
+  padding: 1em 1em 1em 2em;
+}
+
+.node p {
   margin-bottom: 1em;
 }
