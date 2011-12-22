@@ -258,7 +258,8 @@
         result = {
             isValid: true,
             name: '',
-            field: $this
+            field: $this,
+            isGroup: isGroup
         },
         // method run when a validation finished
         onValidate,
