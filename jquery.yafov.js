@@ -468,42 +468,26 @@
 
     $.yafov = {
         /**
-        * Take a map of pattern names and HTML5-compatible regular
-        * expressions, and add them to the patternLibrary. Patterns in
-        * the library are automatically assigned to HTML element pattern
-        * attributes for validation.
-        *
-        * @param {Object} patterns A map of pattern names and HTML5 compatible
-        * regular expressions.
-        *
-        * @returns {Object} patternLibrary The modified pattern library
-        */
-        addPatterns: function (patterns) {
-            var patternLibrary = defaults.patternLibrary,
-                key;
-            for (key in patterns) {
-                if (patterns.hasOwnProperty(key)) {
-                    patternLibrary[key] = patterns[key];
-                }
-            }
-            return patternLibrary;
-        },
-        /**
          * Validate an element
          * @param HTMLElement element The element what you want to validate
          * @param Function cb Callback function, with one argument which is a
-         * result object {isValid: bool, name: validatorName, field: element}
+         * result object {isValid: bool, name: validatorName, field: element, isGroup: bool}
          */
         validate: function (element, cb) {
             methods.validate(element, cb);
         },
+        /**
+         * Checks if an element is valid or not
+         * @param HTMLElement element The element what you want to validate
+         * @param Function cb Callback function, with one argument, which is a result object
+         */
         elementIsValid: function (element, cb) {
             validateElement(element, function (result) {
                 cb(result.isValid);
             });
         },
         /**
-        * @param HTMLElement element A input or textarea or select which will be validated
+        * @param jQueryObject element A input or textarea or select which will be validated as jQuery object
         * @param String name The validator name, defines which validator needs to be used
         * @param Function cb Callback function. This is NOT optional. The third or
         * fourth argument must be the callback. It will receive one argument,
@@ -516,9 +500,49 @@
         validateWith: function (element, name, cb, isGroup) {
             validateWith(element, name, cb, null, isGroup);
         },
+        /**
+         * Adds a new validator method
+         * @param jQuerySelecotorString selector jQuery selector string.
+         * The selector of the
+         * element what should match. Only those elements will be
+         * validated which are matching to this selector (see
+         * $(element).is('{selector}'))
+         * @param String name String the name of the validator, eg.: required,
+         * number
+         * When we add a new validator a name must be given. If a validator
+         * already exists with the same name, the old one will be overwritten
+         * @param Function fn The validator function. The function must handle 3 arguments:
+         * value: the current value of the element: which the
+         * $(element).val() except for checboxes because then $(element).is(':checked')
+         * element: the element which needs to be validated (jQuery object)
+         * callback: a callback function what you should call when you
+         * figured out that the element is valid or not. You must
+         * pass the result as a boolean. It must bee true if the
+         * field is valid or false if it's invalid
+         */
         addMethod: function (selector, name, fn) {
             addMethod(selector, name, fn);
         },
+        /**
+         * @param jQuerySelectorString selector The selector of the element
+         * what should match. Only those elements will be validated which are
+         * matching to this selector (see $(element).is('{selector}'))
+         * @param String name the name of the validator, eg.: required, number
+         * When we add a new validator a name must be given. If a validator
+         * already exists with the same name, it will be overwritten
+         * @param Function fn The validator function. The function must handle 3 arguments:
+         * value: _doesn't make any sense here, would be better to remove, no?_
+         * because then $(element).is(':checked')
+         * elements: The group of the elements which needs to be validated (jQuery object).
+         * callback: a callback function what you should call when you
+         * figured out that the element is valid or not. You must
+         * pass the result as a boolean. It must bee true if the
+         * field is valid or false if it's invalid
+         * @param Function getGroupItems The function which collects the
+         * elements which are belonging to the same group element: The element
+         * which is a member of a group. The method should find the other
+         * members of the group and return them as a jQuery object.
+         */
         addGroupMethod: function (selector, name, fn, getGroupItems) {
             addGroupMethod(selector, name, fn, getGroupItems);
         }
