@@ -130,7 +130,7 @@
                  *   pass the result as a boolean. It must bee true if the
                  *   field is valid or false if it's invalid
                  */
-                addGroup: function (selector, name, fn, groupCollector) {
+                addGroup: function (selector, name, fn, getGroupItems) {
                     var existIndex, index, item;
 
                     existIndex = interf.indexByName(name, true);
@@ -139,7 +139,7 @@
                         selector: selector,
                         fn: fn,
                         name: name,
-                        groupCollector: groupCollector
+                        getGroupItems: getGroupItems
                     };
                     groupMethodsByName[name] = index;
                     groupMethods[index] = item;
@@ -185,8 +185,8 @@
         validatorMethods.add(selector, name, fn);
     },
 
-    addGroupMethod = function (selector, name, fn, groupCollector) {
-        validatorMethods.addGroup(selector, name, fn, groupCollector);
+    addGroupMethod = function (selector, name, fn, getGroupItems) {
+        validatorMethods.addGroup(selector, name, fn, getGroupItems);
     },
 
     /**
@@ -211,7 +211,7 @@
 
         if (typeof method !== 'undefined') {
             if (isGroup) {
-                element = method.groupCollector(element);
+                element = method.getGroupItems(element);
             } else {
                 element = $(element);
             }
@@ -426,17 +426,17 @@
                 //
                 // The best would be if it would be possible to find only the
                 // first element for each group by the first time
-                // But that would require to make the groupCollector too
+                // But that would require to make the getGroupItems too
                 // complex (which isn't so simple already)
                 if (groupFields.length > 0) {
                     groupFields.each(function (gfIndex, field) {
                         // create a jquery object from the field, because in the
                         // collector probably that will be used and then don't need
-                        // to get an object each time the groupCollector method
+                        // to get an object each time the getGroupItems method
                         // called
                         var jqField = $(field);
                         $.each(groupMethods, function (gmIndex, method) {
-                            var fields = method.groupCollector(jqField);
+                            var fields = method.getGroupItems(jqField);
                             if (fields.length > 0) {
                                 groupFieldsArr.push(fields[0]);
                             }
@@ -519,8 +519,8 @@
         addMethod: function (selector, name, fn) {
             addMethod(selector, name, fn);
         },
-        addGroupMethod: function (selector, name, fn, groupCollector) {
-            addGroupMethod(selector, name, fn, groupCollector);
+        addGroupMethod: function (selector, name, fn, getGroupItems) {
+            addGroupMethod(selector, name, fn, getGroupItems);
         }
     };
 
