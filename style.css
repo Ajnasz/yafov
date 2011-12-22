@@ -172,11 +172,13 @@ a:hover {
 fieldset {
   border: 1px solid #999;
   padding: 1em;
+  margin-bottom: 1em;
 }
 
-label.error {
-  color: red;
-  font-size: 11px;
+legend {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 0 5px;
 }
 
 input, button {
@@ -194,13 +196,22 @@ form {
   padding: 1em;
 }
 
-form > fieldset > .row  {
-  margin-bottom: 1em;
-}
-
 ul > li {
   list-style-type: disc;
   line-height: 2em;
+}
+
+code {
+  font-family: monospace;
+}
+
+label.error {
+  color: red;
+  font-size: 11px;
+}
+
+form > fieldset .row  {
+  margin-bottom: 1em;
 }
 
 #Page {
