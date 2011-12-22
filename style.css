@@ -213,8 +213,8 @@ ul > li {
   display: none;
 }
 #Messages.hasMessage {
-  background: #eee;
-  border: 1px solid #666;
+  background: #FFC;
+  border: 1px solid #FFA500;
   display: block;
   margin: 10px 0;
   padding: 5px;
@@ -234,6 +234,7 @@ input.valid {
 
 input.load {
   border-color: #208AB0;
+  background-color: #E0F7FF;
 }
 
 .node {

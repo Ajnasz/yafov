@@ -121,19 +121,29 @@
             <label for="Radio2Test1">Radio1</label>
             <input type="radio" name="radio2test" id="Radio2Test1" value="1" required />
 
-            <label for="RadioTest2">Radio2</label>
+            <label for="Radio2Test2">Radio2</label>
             <input type="radio" name="radio2test" id="Radio2Test2" value="2" required />
           </fieldset>
           </div>
           <div class="row">
             <label for="DateTest1">Year:</label>
-            <input type="text" name="datetest1" id="DateTest1" value="" class="datetest year" size="4" />
+            <input type="text" name="year1" id="DateTest1" value="" class="datetest year" size="4" />
+
+            <label for="DateTest2">Month:</label>
+            <input type="text" name="month1" id="DateTest2" value="" class="datetest month"  size="2"/>
+
+            <label for="DateTest3">Day:</label>
+            <input type="text" name="day1" id="DateTest3" value="" class="datetest day" size="2" />
+          </div>
+          <div class="row">
+            <label for="Date2Test1">Year:</label>
+            <input type="text" name="year2" id="Date2Test1" value="" class="datetest year" size="4" />
 
             <label for="RadioTest2">Month:</label>
-            <input type="text" name="datetest2" id="DateTest2" value="" class="datetest month"  size="2"/>
+            <input type="text" name="month2" id="Date2Test2" value="" class="datetest month"  size="2"/>
 
             <label for="RadioTest2">Day:</label>
-            <input type="text" name="datetest2" id="DateTest2" value="" class="datetest day" size="2" />
+            <input type="text" name="day2" id="Date2Test2" value="" class="datetest day" size="2" />
           </div>
           <!--
           <div class="row">
@@ -142,7 +152,7 @@
           </div>
           -->
           <input type="submit" value="Submit" />
-          <button type="button" id="TelValidate">Validate tel!</button>
+          <button type="button" id="TelValidate" title="Validate tel field but only with the telfoobar validator">Validate tel!</button>
         </fieldset>
       </form>
       <h2 id="DemoCode">Demo code</h2>
@@ -159,8 +169,7 @@ $(document).ready(function () {
     // add custom method
     $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
         $(element).addClass('load');
-        // imagine that this is an ajax call, and the function is the
-        // called when the request was success
+        // imagine that this is an ajax call, and the function is the callback
         setTimeout(function () {
             var isValid = value !== '123';
             cb(isValid);
@@ -168,14 +177,18 @@ $(document).ready(function () {
         }, 1000);
     });
 
+    // add a custom group validator
+    // that going to handle 3 elements as one
     $.yafov.addGroupMethod(
         '.datetest',
         'datetest',
-        // that method will do the validation
-        // the elements variable will contain all elements of the group
-        // the elements are collected by the function what you need to pass as
-        // the 4th argument
-        // The value argument here doesn't make too much sense..
+        /**
+         * that method will do the validation
+         * the elements variable will contain all elements of the group
+         * the elements are collected by the function what you need to pass as
+         * the 4th argument
+         * The value argument here doesn't make too much sense..
+         */
         function datetestGroupValiadator(value, elements, cb) {
             var valid = true;
             // check for the format of the fields, everything should be number
@@ -203,15 +216,16 @@ $(document).ready(function () {
             }
             cb(valid);
         },
-        /*
-          * collects all elements which belongs to the group
-          * one parameter, which is the reference element
-          */
-        function datetestGroupCollector(element) {
-            var elem = $(element),
-                form = elem.closest('form'),
+        /**
+         * collects all elements which belongs to the group
+         * has one parameter, which is the reference element as a jQuery object
+         */
+        function datetestGetGroupItems(elem) {
+            // in that example we keep the elements of a group in a div which has a "row" class
+            var form = elem.closest('.row'),
                 elements;
 
+            // collect all elements with datest class in the row div
             elements = form.find('.datetest');
             return elements;
         }
@@ -231,7 +245,12 @@ $(document).ready(function () {
         // checking the name of the validation result to find out what was the error
         switch (error.name) {
         case 'required':
-            msg = 'The field is required.';
+            // you can see if it's an error of a group
+            if (error.isGroup) {
+                msg = 'The field is required. (group)';
+            } else {
+                msg = 'The field is required.';
+            }
             break;
         case 'number':
             msg = 'The value must be a number.';
@@ -243,14 +262,18 @@ $(document).ready(function () {
             msg = 'Please enter a valid url.';
             break;
         case 'datetest':
-            msg = 'The date must be later than now';
+            msg = 'The date must be later than today';
             break;
         }
         field.addClass('error').removeClass('valid');
         var label = $('<label />');
         label.addClass('error').attr('for', fieldId).text(msg);
-        field.parent().find('label.error').remove().end()
-        .append(label);
+        field
+          // remove existing error message
+          .parent().find('label.error').remove()
+          .end()
+          // add new error message
+          .append(label);
     });
 
     // Listen to validfound event and remove the error message if needed
@@ -269,13 +292,18 @@ $(document).ready(function () {
     // Listen to forminvalid and do nothing now :) You may wan't to log the issues
     validator.bind('forminvalid', function (e, args) {
         $('#Messages').text('the form is invalid').addClass('hasMessage');
+        // scroll to the first invalid element
+       window.scrollTo(0, args.errors[0].field.parent().position().top - 10);
     });
 
-    // When user clicks on #TelValidate button show a message in the #Messages div
+    // When user clicks on #TelValidate button only one validator method will
+    // be called only on one field and our callback will put a message into the Messages div
     $('#TelValidate').click(function () {
-        $.yafov.validateWith($('#RadioTest1'), 'required', function (isValid) {
+        $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
             $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
-        }, true);
+        // scroll back to the message, so the user can see it
+        window.scrollTo(0, $('#Messages').closest('form').position().top);
+        });
     });
 });
     </script>
