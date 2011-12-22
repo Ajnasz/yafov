@@ -468,27 +468,6 @@
 
     $.yafov = {
         /**
-        * Take a map of pattern names and HTML5-compatible regular
-        * expressions, and add them to the patternLibrary. Patterns in
-        * the library are automatically assigned to HTML element pattern
-        * attributes for validation.
-        *
-        * @param {Object} patterns A map of pattern names and HTML5 compatible
-        * regular expressions.
-        *
-        * @returns {Object} patternLibrary The modified pattern library
-        */
-        addPatterns: function (patterns) {
-            var patternLibrary = defaults.patternLibrary,
-                key;
-            for (key in patterns) {
-                if (patterns.hasOwnProperty(key)) {
-                    patternLibrary[key] = patterns[key];
-                }
-            }
-            return patternLibrary;
-        },
-        /**
          * Validate an element
          * @param HTMLElement element The element what you want to validate
          * @param Function cb Callback function, with one argument which is a
