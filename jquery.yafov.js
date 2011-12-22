@@ -130,7 +130,7 @@
                  *   pass the result as a boolean. It must bee true if the
                  *   field is valid or false if it's invalid
                  */
-                addGroup: function (selector, name, fn, groupCollector) {
+                addGroup: function (selector, name, fn, getGroupItems) {
                     var existIndex, index, item;
 
                     existIndex = interf.indexByName(name, true);
@@ -139,7 +139,7 @@
                         selector: selector,
                         fn: fn,
                         name: name,
-                        groupCollector: groupCollector
+                        getGroupItems: getGroupItems
                     };
                     groupMethodsByName[name] = index;
                     groupMethods[index] = item;
@@ -185,8 +185,8 @@
         validatorMethods.add(selector, name, fn);
     },
 
-    addGroupMethod = function (selector, name, fn, groupCollector) {
-        validatorMethods.addGroup(selector, name, fn, groupCollector);
+    addGroupMethod = function (selector, name, fn, getGroupItems) {
+        validatorMethods.addGroup(selector, name, fn, getGroupItems);
     },
 
     /**
@@ -211,7 +211,7 @@
 
         if (typeof method !== 'undefined') {
             if (isGroup) {
-                element = method.groupCollector(element);
+                element = method.getGroupItems(element);
             } else {
                 element = $(element);
             }
@@ -258,7 +258,8 @@
         result = {
             isValid: true,
             name: '',
-            field: $this
+            field: $this,
+            isGroup: isGroup
         },
         // method run when a validation finished
         onValidate,
@@ -386,7 +387,7 @@
                         }
                     }
                 };
-                collectInvalids = function(fields, group) {
+                collectInvalids = function (fields, group) {
                     var validated = 0;
                     return function () {
                         methods.validate(this, function (result) {
@@ -398,7 +399,7 @@
                                 if (group) {
                                     groupFieldsValidated = true;
                                 } else {
-                                  fieldsValidated = true;
+                                    fieldsValidated = true;
                                 }
                                 finish();
                             }
@@ -408,7 +409,12 @@
                 fields = form.find(settings.kbSelectors + ',' +
                   settings.mSelectors + ',' +
                   settings.activeClassSelector).not(groupSelectors.join(','));
-                fields.each(collectInvalids(fields, false));
+                if (fields.length > 0) {
+                    fields.each(collectInvalids(fields, false));
+                } else {
+                    fieldsValidated = true;
+                    finish();
+                }
 
                 // here comes the slow part
                 // first we search for all elements which are belongs to a group validator
@@ -416,20 +422,30 @@
                 groupFieldsArr = [];
                 // then we go through all of the found elements
                 // and keep only one element from each group
-                // So we one group will be validated only once
+                // So a group will be validated only once
                 //
                 // The best would be if it would be possible to find only the
                 // first element for each group by the first time
-                // But that would require to make the groupCollector too
+                // But that would require to make the getGroupItems too
                 // complex (which isn't so simple already)
-                groupFields.each(function (gfIndex, field) {
-                    $.each(groupMethods, function (gmIndex, method) {
-                        var fields = method.groupCollector(field);
-                        if (fields.length > 0) {
-                          groupFieldsArr.push(method.groupCollector(field)[0]);
-                        }
+                if (groupFields.length > 0) {
+                    groupFields.each(function (gfIndex, field) {
+                        // create a jquery object from the field, because in the
+                        // collector probably that will be used and then don't need
+                        // to get an object each time the getGroupItems method
+                        // called
+                        var jqField = $(field);
+                        $.each(groupMethods, function (gmIndex, method) {
+                            var fields = method.getGroupItems(jqField);
+                            if (fields.length > 0) {
+                                groupFieldsArr.push(fields[0]);
+                            }
+                        });
                     });
-                });
+                } else {
+                    groupFieldsValidated = true;
+                    finish();
+                }
                 $.each($.unique(groupFieldsArr), collectInvalids(groupFieldsArr, true));
             });
 
@@ -503,8 +519,8 @@
         addMethod: function (selector, name, fn) {
             addMethod(selector, name, fn);
         },
-        addGroupMethod: function (selector, name, fn, groupCollector) {
-            addGroupMethod(selector, name, fn, groupCollector);
+        addGroupMethod: function (selector, name, fn, getGroupItems) {
+            addGroupMethod(selector, name, fn, getGroupItems);
         }
     };
 
