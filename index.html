@@ -13,9 +13,9 @@
 
         <div id="download">
           <a href="https://github.com/Ajnasz/yafov/zipball/master">
-          <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+            <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
           <a href="https://github.com/Ajnasz/yafov/tarball/master">
-          <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+            <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
         </div>
         <p>The point of this plugin is to create an event based validator which
         does only the validation. So it doesn't want to try to figure out what
@@ -106,45 +106,48 @@
           </div>
           <h3>Group validators</h3>
           <div class="row">
+            <fieldset>
+              <legend>Group 1</legend>
+              <label for="RadioTest1">Radio 1</label>
+              <input type="radio" name="radiotest" id="RadioTest1" value="1" required />
+
+              <label for="RadioTest2">Radio2</label>
+              <input type="radio" name="radiotest" id="RadioTest2" value="2" required />
+            </fieldset>
+          </div>
+          <div class="row">
+            <fieldset>
+              <legend>Group 2</legend>
+              <label for="Radio2Test1">Radio1</label>
+              <input type="radio" name="radio2test" id="Radio2Test1" value="1" required />
+
+              <label for="Radio2Test2">Radio2</label>
+              <input type="radio" name="radio2test" id="Radio2Test2" value="2" required />
+            </fieldset>
+          </div>
           <fieldset>
-            <legend>Group 1</legend>
-            <label for="RadioTest1">Radio 1</label>
-            <input type="radio" name="radiotest" id="RadioTest1" value="1" required />
+            <legend>Custom group test</legend>
+            <div class="row">
+              <label for="DateTest1">Year:</label>
+              <input type="text" name="year1" id="DateTest1" value="" class="datetest year" size="4" />
 
-            <label for="RadioTest2">Radio2</label>
-            <input type="radio" name="radiotest" id="RadioTest2" value="2" required />
+              <label for="DateTest2">Month:</label>
+              <input type="text" name="month1" id="DateTest2" value="" class="datetest month"  size="2"/>
+
+              <label for="DateTest3">Day:</label>
+              <input type="text" name="day1" id="DateTest3" value="" class="datetest day" size="2" />
+            </div>
+            <div class="row">
+              <label for="Date2Test1">Year:</label>
+              <input type="text" name="year2" id="Date2Test1" value="" class="datetest year" size="4" />
+
+              <label for="RadioTest2">Month:</label>
+              <input type="text" name="month2" id="Date2Test2" value="" class="datetest month"  size="2"/>
+
+              <label for="RadioTest2">Day:</label>
+              <input type="text" name="day2" id="Date2Test2" value="" class="datetest day" size="2" />
+            </div>
           </fieldset>
-          </div>
-          <div class="row">
-          <fieldset>
-            <legend>Group 2</legend>
-            <label for="Radio2Test1">Radio1</label>
-            <input type="radio" name="radio2test" id="Radio2Test1" value="1" required />
-
-            <label for="Radio2Test2">Radio2</label>
-            <input type="radio" name="radio2test" id="Radio2Test2" value="2" required />
-          </fieldset>
-          </div>
-          <div class="row">
-            <label for="DateTest1">Year:</label>
-            <input type="text" name="year1" id="DateTest1" value="" class="datetest year" size="4" />
-
-            <label for="DateTest2">Month:</label>
-            <input type="text" name="month1" id="DateTest2" value="" class="datetest month"  size="2"/>
-
-            <label for="DateTest3">Day:</label>
-            <input type="text" name="day1" id="DateTest3" value="" class="datetest day" size="2" />
-          </div>
-          <div class="row">
-            <label for="Date2Test1">Year:</label>
-            <input type="text" name="year2" id="Date2Test1" value="" class="datetest year" size="4" />
-
-            <label for="RadioTest2">Month:</label>
-            <input type="text" name="month2" id="Date2Test2" value="" class="datetest month"  size="2"/>
-
-            <label for="RadioTest2">Day:</label>
-            <input type="text" name="day2" id="Date2Test2" value="" class="datetest day" size="2" />
-          </div>
           <!--
           <div class="row">
             <label for="ColorTest">color: </label><br />
@@ -152,7 +155,8 @@
           </div>
           -->
           <input type="submit" value="Submit" />
-          <button type="button" id="TelValidate" title="Validate tel field but only with the telfoobar validator">Validate tel!</button>
+          <button type="button" id="ForceTelValidate" title="Force to validate one field">Force tel field validation</button>
+          <button type="button" id="TelValidate" title="Validate tel field but only with the telfoobar validator">Validate with telfoobar method</button>
         </fieldset>
       </form>
       <h2 id="DemoCode">Demo code</h2>
@@ -190,6 +194,7 @@ $(document).ready(function () {
          * The value argument here doesn't make too much sense..
          */
         function datetestGroupValiadator(value, elements, cb) {
+            // presume that the field is valid
             var valid = true;
             // check for the format of the fields, everything should be number
             // you may wan't to make it more strict, but it's OK for now
@@ -199,26 +204,28 @@ $(document).ready(function () {
             // if the format is OK, check the actual value
             if (valid) {
                 // get the values
-                var year = elements.filter('.year').val();
-                var month = elements.filter('.month').val();
-                var day = elements.filter('.day').val();
+                var year = elements.filter('.year').val(),
+                    month = elements.filter('.month').val(),
+                    day = elements.filter('.day').val(),
 
-                // create date objects what we will compare
-                var date = new Date(), now = new Date();
+                    // create date objects what we will compare
+                    date = new Date(), now = new Date();
 
                 // set year, month and day
                 date.setFullYear(year);
                 date.setMonth(month - 1);
                 date.setDate(day);
 
-                // compare the dates, if date.getTime() is greater then now.getTime() the entered date should be ok
+                // compare the dates, if date.getTime() is greater then
+                // now.getTime() the entered date should be ok
                 valid = date.getTime() > now.getTime();
             }
             cb(valid);
         },
         /**
          * collects all elements which belongs to the group
-         * has one parameter, which is the reference element as a jQuery object
+         * has one parameter, which is the reference to a element from the
+         * group as a jQuery object
          */
         function datetestGetGroupItems(elem) {
             // in that example we keep the elements of a group in a div which has a "row" class
@@ -300,9 +307,26 @@ $(document).ready(function () {
     // be called only on one field and our callback will put a message into the Messages div
     $('#TelValidate').click(function () {
         $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
-            $('#Messages').text(isValid ? 'The tel field is valid' : 'The tel field is invalid').addClass('hasMessage');
-        // scroll back to the message, so the user can see it
-        window.scrollTo(0, $('#Messages').closest('form').position().top);
+            var msg = 'The tel field is valid';
+            if (isValid) {
+                msg = 'The tel field is invalid';
+            }
+            msg += '<br />Using the <code>$.yafov.validateWith</code> method, you can check if a field passes a (only one) validator method, but it won\'t trigger any events, you must handle everything in the callback method.';
+            $('#Messages').html(msg).addClass('hasMessage');
+            // scroll back to the message, so the user can see it
+            window.scrollTo(0, $('#Messages').closest('form').position().top);
+        });
+    });
+    $('#ForceTelValidate').click(function () {
+        $.yafov.validate($('#TelTest'), function (result) {
+            var msg = 'The tel field is valid';
+            if (result.isValid) {
+                msg = 'The tel field is invalid'; 
+            }
+            msg += '<br />Using the <code>$.yafov.validate</code> method, you can check if a field passes all validations, and validfound or invalidfound events will be triggered.';
+            $('#Messages').html(msg).addClass('hasMessage');
+            // scroll back to the message, so the user can see it
+            window.scrollTo(0, $('#Messages').closest('form').position().top);
         });
     });
 });
