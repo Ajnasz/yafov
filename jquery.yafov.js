@@ -244,28 +244,32 @@
         return matching;
     },
 
+    /**
+     *
+     */
     validateElement = function (element, cb) {
         var $this = $(element),
 
-        isGroup = isGroupElement(element),
+            isGroup = isGroupElement(element),
 
-        // get the value once, so it gonna be cached
-        // length of the validator methods
-        vl = validatorMethods.len(isGroup),
-        // loop index
-        index = 0,
-        // default result object
-        result = {
-            isValid: true,
-            name: '',
-            field: $this,
-            isGroup: isGroup
-        },
-        // method run when a validation finished
-        onValidate,
-        validatorItemCb,
-        value,
-        validate;
+            // length of the validator methods
+            vl = validatorMethods.len(isGroup),
+            // loop index: get validators by their index
+            index = 0,
+            // default result object
+            result = {
+                isValid: true,
+                name: '',
+                field: $this,
+                isGroup: isGroup
+            },
+            // method run when a validation finished
+            onValidate,
+            validatorItemCb,
+            value,
+            validate;
+
+          // get the value once, so it gonna be cached
         value = ($this.is('[type=checkbox]')) ?  $this.is(':checked') : $this.val();
 
         validate = function () {
@@ -355,22 +359,25 @@
         * @returns {object} jQuery object for chaining.
         */
         bindDelegation: function (settings) {
-            this.filter('form').attr('novalidate', 'novalidate');
-            this.find('form').attr('novalidate', 'novalidate');
-            this.parents('form').attr('novalidate', 'novalidate');
+            // bind to forms
+            this.filter('form').attr('novalidate', 'novalidate')
+                .find('form').attr('novalidate', 'novalidate')
+                .parents('form').attr('novalidate', 'novalidate');
 
             this.submit(function (e) {
+                // prevent submitting the form before validation
                 e.preventDefault();
+
                 var form = $(this),
                     errors = [],
                     groupMethods = validatorMethods.getAll(true),
                     groupSelectors = $.unique($.map(groupMethods, function (method) {
                         return method.selector;
                     })),
-                    fields,
-                    groupFields,
                     fieldsValidated = false,
                     groupFieldsValidated = false,
+                    fields,
+                    groupFields,
                     collectInvalids,
                     groupFieldsArr,
                     finish;
