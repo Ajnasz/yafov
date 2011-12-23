@@ -168,7 +168,6 @@
 		<script type="text/javascript" src="jquery.yafov.js"></script>
 
     <script type="text/javascript">
-
 $(document).ready(function () {
     // add custom method
     $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
@@ -195,7 +194,9 @@ $(document).ready(function () {
          */
         function datetestGroupValiadator(value, elements, cb) {
             // presume that the field is valid
-            var valid = true;
+            var valid = true,
+                year, month, day,
+                date, now;
             // check for the format of the fields, everything should be number
             // you may wan't to make it more strict, but it's OK for now
             elements.each(function () {
@@ -204,12 +205,13 @@ $(document).ready(function () {
             // if the format is OK, check the actual value
             if (valid) {
                 // get the values
-                var year = elements.filter('.year').val(),
-                    month = elements.filter('.month').val(),
-                    day = elements.filter('.day').val(),
+                year = elements.filter('.year').val();
+                month = elements.filter('.month').val();
+                day = elements.filter('.day').val();
 
-                    // create date objects what we will compare
-                    date = new Date(), now = new Date();
+                // create date objects what we will compare
+                date = new Date();
+                now = new Date();
 
                 // set year, month and day
                 date.setFullYear(year);
@@ -242,12 +244,15 @@ $(document).ready(function () {
     var validator = $('#NewTypes').yafov();
 
     // Listen to invalidfound event and show error
+    // Every time the validator finds an invalid element, the invalidfound
+    // event will be triggered
     validator.bind('invalidfound', function (e, error) {
-        var field = $(error.field);
-        var fieldId = field.attr('id');
+        var field = $(error.field),
+            fieldId = field.attr('id'),
 
-        // default error message
-        var msg = 'Error found: ' + error.name;
+            // default error message
+            msg = 'Error found: ' + error.name,
+            label;
 
         // checking the name of the validation result to find out what was the error
         switch (error.name) {
@@ -272,15 +277,16 @@ $(document).ready(function () {
             msg = 'The date must be later than today';
             break;
         }
+
+        // add error class to field
         field.addClass('error').removeClass('valid');
-        var label = $('<label />');
+
+        label = $('<label />');
         label.addClass('error').attr('for', fieldId).text(msg);
-        field
-          // remove existing error message
-          .parent().find('label.error').remove()
-          .end()
+        // remove existing error message
+        field.parent().find('label.error').remove()
           // add new error message
-          .append(label);
+          .end().append(label);
     });
 
     // Listen to validfound event and remove the error message if needed
@@ -300,11 +306,12 @@ $(document).ready(function () {
     validator.bind('forminvalid', function (e, args) {
         $('#Messages').text('the form is invalid').addClass('hasMessage');
         // scroll to the first invalid element
-       window.scrollTo(0, args.errors[0].field.parent().position().top - 10);
+        window.scrollTo(0, args.errors[0].field.parent().position().top - 10);
     });
 
     // When user clicks on #TelValidate button only one validator method will
-    // be called only on one field and our callback will put a message into the Messages div
+    // be called only on one field and the callback will put a message into the
+    // Messages div
     $('#TelValidate').click(function () {
         $.yafov.validateWith($('#TelTest'), 'required', function (isValid) {
             var msg = 'The tel field is valid';
@@ -317,6 +324,9 @@ $(document).ready(function () {
             window.scrollTo(0, $('#Messages').closest('form').position().top);
         });
     });
+    // When user clicks on #ForceTelValidate button all validator methods will
+    // be called only on one field and the callback will put a message into the
+    // Messages div
     $('#ForceTelValidate').click(function () {
         $.yafov.validate($('#TelTest'), function (result) {
             var msg = 'The tel field is valid';
