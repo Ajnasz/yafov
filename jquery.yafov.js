@@ -653,7 +653,7 @@ THE SOFTWARE.
         ['[type="number"],.number', 'number', function (value, element, cb) {
             value = value.replace(/(^\s+|\s+$)/g, '');
             // +null and +'\s+ returns 0
-            valid = isOptional(element, value) ||
+            var valid = isOptional(element, value) ||
                 (value !== null && value !== '' && !isNaN(+value));
             cb(valid);
         }],
