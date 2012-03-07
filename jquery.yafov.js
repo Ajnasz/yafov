@@ -25,17 +25,19 @@ THE SOFTWARE.
  */
 
 /*global jQuery, window */
-/*jslint browser: true, devel: true, onevar: true, undef: true, nomen: true,
-        eqeqeq: true, bitwise: true, regexp: true, newcap: true, immed: true */
+/*jslint browser: true, devel: true, undef: true, nomen: true,
+        bitwise: true, regexp: true, newcap: true, sloppy: true */
 (function ($) {
-    var yafov = { // Public API
+    var yafov, defaults, patternLibrary, validatorMethods, methods;
+    yafov = { // Public API
         defaults: {
             debug: false,
 
-            // HTML5-compatible validation pattern library that can be extended and/or overriden.
-            //** TODO: Test the new regex patterns. Should I apply these to the new input types?
+            // HTML5-compatible validation pattern library that can be extended
+            // and/or overriden.
+            //** TODO: Test the new regex patterns. Should I apply these to the
+            //new input types?
             patternLibrary: {
-                // **TODO: password
                 phone: /([\+][0-9]{1,3}([ \.\-])?)?([\(]{1}[0-9]{3}[\)])?([0-9A-Z \.\-]{1,32})((x|ext|extension)?[0-9]{1,4}?)/,
 
                 // Shamelessly lifted from Scott Gonzalez via the Bassistance
@@ -47,8 +49,9 @@ THE SOFTWARE.
                 // Validation plugin http://projects.scottsplayground.com/iri/
                 url: /(https?|ftp):\/\/(((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?/,
 
-                // Number, including positive, negative, and floating decimal. Credit: bassistance
-                number: /-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?/,
+                // Number, including positive, negative, and floating decimal.
+                // Credit: bassistance
+                // number: /-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?/,
 
                 // Date in ISO format. Credit: bassistance
                 dateISO: /\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/,
@@ -87,10 +90,10 @@ THE SOFTWARE.
             // Elements to validate with allValid (only validating visible elements)
             allValidSelectors: 'input:visible, textarea:visible, select:visible'
         }
-    },
+    };
     // Aliases
-    defaults = yafov.defaults,
-    patternLibrary = defaults.patternLibrary,
+    defaults = yafov.defaults;
+    patternLibrary = defaults.patternLibrary;
 
     validatorMethods = (function () {
         var methods = [],
@@ -199,15 +202,15 @@ THE SOFTWARE.
             };
         // finally return the interface
         return interf;
-    }()),
+    }());
 
-    addMethod = function (selector, name, fn) {
+    function addMethod(selector, name, fn) {
         validatorMethods.add(selector, name, fn);
-    },
+    }
 
-    addGroupMethod = function (selector, name, fn, getGroupItems) {
+    function addGroupMethod(selector, name, fn, getGroupItems) {
         validatorMethods.addGroup(selector, name, fn, getGroupItems);
-    },
+    }
 
     /**
      * @param HTMLElement element A input or textarea or select which will be validated
@@ -220,9 +223,9 @@ THE SOFTWARE.
      * fourth argument must be the callback. It will receive one argument,
      * which will be a boolean: true if the field is valid, false if not
      */
-    validateWith = function validateWith(element, name, cb, value, isGroup) {
-        var args = arguments,
-            method, callback;
+    function validateWith(element, name, cb, value, isGroup) {
+
+        var method, callback;
 
         callback = function (isValid) {
             cb(isValid, element);
@@ -244,14 +247,14 @@ THE SOFTWARE.
         } else {
             callback(true);
         }
-    },
+    }
 
-    isOptional = function isOptional(element, value) {
+    function isOptional(element, value) {
         return !element.is('[required],.required') && value === '';
-    },
+    }
 
     /* method which finds out if an element belongs to a group */
-    isGroupElement = function (element) {
+    function isGroupElement(element) {
         var groupValidators = validatorMethods.getAll(true),
             gl = groupValidators.length,
             matching = false,
@@ -262,12 +265,12 @@ THE SOFTWARE.
             matching = elem.is(groupValidators[i].selector);
         }
         return matching;
-    },
+    }
 
     /**
      *
      */
-    validateElement = function (element, cb) {
+    function validateElement(element, cb) {
         var $this = $(element),
 
             isGroup = isGroupElement(element),
@@ -325,7 +328,7 @@ THE SOFTWARE.
             onValidate();
         };
         validate(index);
-    },
+    }
 
     methods = {
         validate: function (element, cb) {
@@ -352,17 +355,21 @@ THE SOFTWARE.
         */
         delegateEvents: function (selectors, eventFlags, element, settings) {
             var events = [],
-              $element = $(element),
-              key, validate, i, el;
+                $element = $(element),
+                key,
+                i,
+                el;
 
-            validate = function (e) {
+            function validate(e) {
                 methods.validate(this);
-            };
+            }
+
             $.each(eventFlags, function (key, value) {
                 if (value) {
                     events.push(key);
                 }
             });
+
             key = 0;
 
             for (i = 0, el = events.length; i < el; i += 1) {
@@ -431,11 +438,11 @@ THE SOFTWARE.
                                 finish();
                             }
                         });
-                    }
+                    };
                 };
                 fields = form.find(settings.kbSelectors + ',' +
-                  settings.mSelectors + ',' +
-                  settings.activeClassSelector).not(groupSelectors.join(','));
+                    settings.mSelectors + ',' +
+                    settings.activeClassSelector).not(groupSelectors.join(','));
                 if (fields.length > 0) {
                     fields.each(collectInvalids(fields, false));
                 } else {
@@ -477,12 +484,13 @@ THE SOFTWARE.
             });
 
             return this.each(function () {
-                var kbEvents = {
+                var kbEvents, mEvents;
+                kbEvents = {
                     focusout: settings.focusout,
                     focusin: settings.focusin,
                     change: settings.change,
                     keyup: settings.keyup
-                },
+                };
                 mEvents = {
                     click: settings.click
                 };
@@ -514,7 +522,8 @@ THE SOFTWARE.
             });
         },
         /**
-        * @param jQueryObject element A input or textarea or select which will be validated as jQuery object
+        * @param jQueryObject element A input or textarea or select which will
+        * be validated as jQuery object
         * @param String name The validator name, defines which validator needs to be used
         * @param Function cb Callback function. This is NOT optional. The third or
         * fourth argument must be the callback. It will receive one argument,
