@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2011 Lajos Koszti http://ajnasz.hu
+Copyright (c) 2011-2012 Lajos Koszti http://ajnasz.hu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,40 +26,13 @@ THE SOFTWARE.
 
 /*global jQuery, window */
 /*jslint browser: true, devel: true, undef: true, nomen: true,
-        bitwise: true, regexp: true, newcap: true, sloppy: true */
+        bitwise: true, regexp: true, newcap: true */
 (function ($) {
+    "use strict";
     var yafov, defaults, patternLibrary, validatorMethods, methods;
     yafov = { // Public API
         defaults: {
             debug: false,
-
-            // HTML5-compatible validation pattern library that can be extended
-            // and/or overriden.
-            //** TODO: Test the new regex patterns. Should I apply these to the
-            //new input types?
-            patternLibrary: {
-                phone: /([\+][0-9]{1,3}([ \.\-])?)?([\(]{1}[0-9]{3}[\)])?([0-9A-Z \.\-]{1,32})((x|ext|extension)?[0-9]{1,4}?)/,
-
-                // Shamelessly lifted from Scott Gonzalez via the Bassistance
-                // Validation plugin
-                // http://projects.scottsplayground.com/email_address_validation/
-                email: /((([a-zA-Z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-zA-Z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?/,
-
-                // Shamelessly lifted from Scott Gonzalez via the Bassistance
-                // Validation plugin http://projects.scottsplayground.com/iri/
-                url: /(https?|ftp):\/\/(((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-zA-Z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-zA-Z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?/,
-
-                // Number, including positive, negative, and floating decimal.
-                // Credit: bassistance
-                // number: /-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?/,
-
-                // Date in ISO format. Credit: bassistance
-                dateISO: /\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/,
-
-                alpha: /[a-zA-Z]+/,
-                alphaNumeric: /\w+/,
-                integer: /-?\d+/
-            },
 
             // Setup KB event delegation.
             kbSelectors: ':input:not(:submit,:button)',
@@ -72,28 +45,19 @@ THE SOFTWARE.
             mSelectors: '[type="range"], :radio, :checkbox, select, option',
             click: true,
 
-            activeKeyup: true,
+            // activeKeyup: true,
 
-            stripMarkup: true,
+            // stripMarkup: true,
 
             // Validate on submit?
-            // **TODO: This isn't implemented, yet.
             submit: true,
-
-            // Callback stubs
-            invalidCallback: function () {},
-            validCallback: function () {},
-
-            // When submitting, validate elements that haven't been validated yet?
-            validateOnSubmit: true,
 
             // Elements to validate with allValid (only validating visible elements)
             allValidSelectors: 'input:visible, textarea:visible, select:visible'
         }
     };
-    // Aliases
+
     defaults = yafov.defaults;
-    patternLibrary = defaults.patternLibrary;
 
     validatorMethods = (function () {
         var methods = [],
@@ -239,7 +203,7 @@ THE SOFTWARE.
                 element = $(element);
             }
             if (typeof value !== 'string' && !isGroup) {
-                value = (element) ?
+                value = (element.is('[type="checkbox"],[type="radio"]')) ?
                             element.is(':checked') :
                             element.val();
             }
@@ -247,10 +211,6 @@ THE SOFTWARE.
         } else {
             callback(true);
         }
-    }
-
-    function isOptional(element, value) {
-        return !element.is('[required],.required') && value === '';
     }
 
     /* method which finds out if an element belongs to a group */
@@ -331,9 +291,9 @@ THE SOFTWARE.
     }
 
     methods = {
-        validate: function (element, cb) {
+        validate: function validate(element, cb) {
             var $element = $(element);
-            validateElement($element.get(0), function (result) {
+            validateElement($element[0], function validateElement(result) {
                 if (result.isValid) {
                     $element.trigger('validfound', result);
                 } else {
@@ -353,16 +313,17 @@ THE SOFTWARE.
         *
         * @returns {element} The passed element (for method chaining).
         */
-        delegateEvents: function (selectors, eventFlags, element, settings) {
+        delegateEvents: function delegateEvents(selectors, eventFlags, element, settings) {
             var events = [],
                 $element = $(element),
                 key,
                 i,
-                el;
+                el,
+                validate;
 
-            function validate(e) {
+            validate = function validate(e) {
                 methods.validate(this);
-            }
+            };
 
             $.each(eventFlags, function (key, value) {
                 if (value) {
@@ -385,17 +346,17 @@ THE SOFTWARE.
         *
         * @returns {object} jQuery object for chaining.
         */
-        bindDelegation: function (settings) {
+        bindDelegation: function bindDelegates(settings) {
             // bind to forms
             this.filter('form').attr('novalidate', 'novalidate')
                 .find('form').attr('novalidate', 'novalidate')
                 .parents('form').attr('novalidate', 'novalidate');
 
-            this.submit(function (e) {
+            function onSubmit(e) {
                 // prevent submitting the form before validation
                 e.preventDefault();
 
-                var form = $(this),
+                var form = $(e.target),
                     errors = [],
                     groupMethods = validatorMethods.getAll(true),
                     groupSelectors = $.unique($.map(groupMethods, function (method) {
@@ -405,13 +366,11 @@ THE SOFTWARE.
                     groupFieldsValidated = false,
                     fields,
                     groupFields,
-                    collectInvalids,
-                    groupFieldsArr,
-                    finish;
+                    groupFieldsArr;
 
                 // if finished both the simple and group validators formvalid
                 // or forminvalid events gonna be triggered
-                finish = function () {
+                function finish() {
                     if (fieldsValidated && groupFieldsValidated) {
                         if (errors.length < 1) {
                             errors = null;
@@ -420,8 +379,8 @@ THE SOFTWARE.
                             form.trigger('forminvalid', {errors: errors});
                         }
                     }
-                };
-                collectInvalids = function (fields, group) {
+                }
+                function collectInvalids(fields, group) {
                     var validated = 0;
                     return function () {
                         methods.validate(this, function (result) {
@@ -439,7 +398,7 @@ THE SOFTWARE.
                             }
                         });
                     };
-                };
+                }
                 fields = form.find(settings.kbSelectors + ',' +
                     settings.mSelectors + ',' +
                     settings.activeClassSelector).not(groupSelectors.join(','));
@@ -481,7 +440,11 @@ THE SOFTWARE.
                     finish();
                 }
                 $.each($.unique(groupFieldsArr), collectInvalids(groupFieldsArr, true));
-            });
+            }
+
+            if (settings.submit) {
+                this.submit(onSubmit);
+            }
 
             return this.each(function () {
                 var kbEvents, mEvents;
@@ -560,6 +523,7 @@ THE SOFTWARE.
             addMethod(selector, name, fn);
         },
         /**
+         * @method addGroupMethod
          * @param jQuerySelectorString selector The selector of the element
          * what should match. Only those elements will be validated which are
          * matching to this selector (see $(element).is('{selector}'))
@@ -581,6 +545,20 @@ THE SOFTWARE.
          */
         addGroupMethod: function (selector, name, fn, getGroupItems) {
             addGroupMethod(selector, name, fn, getGroupItems);
+        },
+        /**
+         * @method getDefaults
+         *
+         */
+        getDefaults: function getDefaults() {
+            return defaults;
+        },
+        /**
+         * @method setDefaults
+         * @param {Object} options
+         */
+        setDefaults: function setDefaults(options) {
+            $.extend(defaults, options);
         }
     };
 
@@ -605,167 +583,4 @@ THE SOFTWARE.
         // Returning the jQuery object allows for method chaining.
         return methods.bindDelegation.call(this, settings);
     };
-
-    $([
-        /*
-         * value shouldn't be empty
-         * <input type="text" required />
-         * <input type="text" class="required" />
-         */
-        ['[required],.required', 'required', function (value, element, cb) {
-            var valid = !!value;
-            cb(valid);
-        }],
-        /*
-         * value must be a valid url
-         * <input type="url" />
-         * <input type="text" class="url" />
-         */
-        ['[type="url"],.url', 'url', function (value, element, cb) {
-            var valid = isOptional(element, value) ||
-                yafov.defaults.patternLibrary.url.test(value);
-            cb(valid);
-        }],
-        /*
-         * value must be a valid email address
-         * <input type="email" />
-         * <input type="text" class="email" />
-         */
-        ['[type="email"],.email', 'email', function (value, element, cb) {
-            var valid = isOptional(element, value) ||
-                yafov.defaults.patternLibrary.email.test(value);
-            cb(valid);
-        }],
-        /*
-         * value must be a valid tel number
-         * <input type="tel" />
-         * <input type="text" class="tel" />
-         */
-        ['[type="tel"],.tel', 'tel', function (value, element, cb) {
-            var valid = isOptional(element, value) ||
-                yafov.defaults.patternLibrary.phone.test(value);
-            cb(valid);
-        }],
-        /*
-         * value must contain only numeric chars
-         * <input type="text" class="numeric" />
-         */
-        ['[type="number"],.number', 'number', function (value, element, cb) {
-            value = value.replace(/(^\s+|\s+$)/g, '');
-            // +null and +'\s+ returns 0
-            var valid = isOptional(element, value) ||
-                (value !== null && value !== '' && !isNaN(+value));
-            cb(valid);
-        }],
-        /*
-         * Value must be equal or less then max and more or equal then min
-         * range validator: <input type="text" min="3" max="5" ...
-         */
-        ['[type="range"],.range', 'range', function (value, element, cb) {
-            var optional = isOptional(element, value);
-            if (!optional) {
-                validateWith(element, 'min', function (minValid) {
-                    if (minValid) {
-                        validateWith(element, 'max', function (maxValid) {
-                            cb(minValid && maxValid);
-                        }, value, false);
-                    } else {
-                        cb(minValid);
-                    }
-                }, value, false);
-            } else {
-                cb(true);
-            }
-        }],
-        /*
-         * Value must be equal or less
-         * max validator: <input type="text" max="5" ...
-         */
-        ['[max],.max', 'max', function (value, element, cb) {
-            validateWith(element, 'number', function (valid) {
-                // +null returns 0
-                var optional = isOptional(element, value),
-                    maxVal;
-                if (!optional) {
-                    if (element.is('[max]')) {
-                        maxVal = element.attr('max');
-                    } else {
-                        maxVal = element.attr('data-max');
-                    }
-                    valid = +maxVal >= +value && valid;
-                }
-                cb(valid);
-            }, value, false);
-        }],
-        /*
-         * Value must be equal or more
-         * min validator: <input type="text" min="5" ...
-         */
-        ['[min],.min', 'min', function (value, element, cb) {
-            validateWith(element, 'number', function (valid) {
-                var optional = isOptional(element, value),
-                    minVal;
-
-                if (!optional) {
-                    if (element.is('[min]')) {
-                        minVal = element.attr('min');
-                    } else {
-                        minVal = element.attr('data-min');
-                    }
-                    valid = +minVal <= +value && valid;
-                }
-                cb(valid);
-            }, value, false);
-
-        }],
-        /*
-         * value must contain only alpha chars
-         * <input type="text" class="alpha" />
-         */
-        ['.alpha', 'alpha', function (value, element, cb) {
-            var valid = isOptional(element, value) ||
-                        yafov.defaults.patternLibrary.alpha.test(value);
-            cb(valid);
-        }],
-        /*
-         * value must contain only alphanumeric chars
-         * <input type="text" class="alphanumeric" />
-         */
-        ['.alphanumeric', 'alphanumeric', function (value, element, cb) {
-            var valid = isOptional(element, value) ||
-                    yafov.defaults.patternLibrary.alphanumeric.test(value);
-            cb(valid);
-        }]
-    ]).each(function () {
-        addMethod.apply(null, this);
-    });
-    $([
-        /*
-         * value shouldn't be empty
-         * <input type="text" required />
-         * <input type="text" class="required" />
-         */
-        [
-            'input[type="radio"][required],input[type="radio"].required',
-            'required',
-            function requiredGroupValiadator(value, element, cb) {
-                var valid = element.filter(':checked').length > 0;
-                cb(valid);
-            },
-            /*
-             * collects all elements which belongs to the group
-             * one parameter, which is the reference element
-             */
-            function requiredRadioGroupCollector(element) {
-                var elem = $(element),
-                    form = elem.closest('form'),
-                    elements;
-
-                elements = form.find('input[type="radio"][name="' + elem.attr('name') + '"]');
-                return elements;
-            }
-        ]
-    ]).each(function () {
-        addGroupMethod.apply(null, this);
-    });
 }(jQuery));
