@@ -244,62 +244,18 @@ $(document).ready(function () {
     );
 
     // Initialize the validator
-    var validator = $('#NewTypes').yafovUI();
-
-    /*
-    // Listen to invalidfound event and show error
-    // Every time the validator finds an invalid element, the invalidfound
-    // event will be triggered
-    validator.bind('invalidfound', function (e, error) {
-        var field = $(error.field),
-            fieldId = field.attr('id'),
-
-            // default error message
-            msg = 'Error found: ' + error.name,
-            label;
-
-        // checking the name of the validation result to find out what was the error
-        switch (error.name) {
-        case 'required':
-            // you can see if it's an error of a group
-            if (error.isGroup) {
-                msg = 'The field is required. (group)';
-            } else {
-                msg = 'The field is required.';
+    var validator = $('#NewTypes').yafov({
+        // Example how you can overwrite the default onInvalidFound event
+        // handler with your own
+        // Added some logging then call the original one which will place the error messages
+        onInvalidFound: function (e, error) {
+            if (window.console && window.console.log) {
+                window.console.log(error);
             }
-            break;
-        case 'number':
-            msg = 'The value must be a number.';
-            break;
-        case 'email':
-            msg = 'Please enter a valid email address.';
-            break;
-        case 'url':
-            msg = 'Please enter a valid url.';
-            break;
-        case 'datetest':
-            msg = 'The date must be later than today';
-            break;
+            $.yafov.onInvalidFound(e, error);
         }
 
-        // add error class to field
-        field.addClass('error').removeClass('valid');
-
-        label = $('<label />');
-        label.addClass('error').attr('for', fieldId).text(msg);
-        // remove existing error message
-        field.parent().find('label.error').remove()
-          // add new error message
-          .end().append(label);
     });
-
-    // Listen to validfound event and remove the error message if needed
-    validator.bind('validfound', function (e, error, element) {
-        var field = $(error.field);
-        field.removeClass('error').addClass('valid');
-        field.parent().find('label.error').remove();
-    });
-    */
 
     // Listen to formvalid event and submit the form
     validator.bind('formvalid', function (e, args) {
@@ -331,7 +287,7 @@ $(document).ready(function () {
     });
     // When user clicks on #ForceTelValidate button all validator methods will
     // be called only on one field and the callback will put a message into the
-    // Messages div
+    // #Messages div
     $('#ForceTelValidate').click(function () {
         $.yafov.validate($('#TelTest'), function (result) {
             var msg = 'The tel field is valid';
@@ -346,19 +302,18 @@ $(document).ready(function () {
     });
 });
     </script>
-    <!--
     <script type="text/javascript">
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-112351-9']);
-      _gaq.push(['_trackPageview']);
+        if (window.location.host !== '') {
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-112351-9']);
+            _gaq.push(['_trackPageview']);
 
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        }
     </script>
-    -->
 	</body>
 </html>

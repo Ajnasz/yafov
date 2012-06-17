@@ -19,16 +19,43 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/*global jQuery */
+/*jslint browser: true, devel: true, undef: true, bitwise: true, regexp: true, newcap: true */
+/**
+ * Adds default error messages and error displaying.
+ */
 (function ($) {
 
-    var messages = {};
+    var messages = {}, yafov = $.fn.yafov;
     function getMessage(which) {
         return messages[which];
     }
     function setMessage(name, msg) {
         messages[name] = msg;
     }
+
+    /**
+     * Add new or overwrite existing error messages for different valiator methods
+     * @method setMessage
+     * @param {String} name The name of the validator method
+     * @param {String | Function} message The message to show if the validation
+     * says error found. If function, the function must return the error
+     * message. It will have two arguments: event, which is a invalidfound
+     * event and a result object, which is contains details of the error:
+     *result = {
+     *    isValid: true,
+     *    name: '',
+     *    field: $this,
+     *    isGroup: isGroup
+     *},
+     */
     $.yafov.setMessage = setMessage;
+    /**
+     * Simply returns the message or the function for a validator method
+     * @method getMessage
+     * @param {String} name The name of the validator
+     * @type {String | Function}
+     */
     $.yafov.getMessage = getMessage;
 
     setMessage('required', 'The field is required.');
@@ -71,41 +98,58 @@ THE SOFTWARE.
         return 'Minimum value is ' + min + '.';
     });
 
-    $.fn.yafovUI = function (options) {
-        var validator = $(this).yafov(options);
-        validator.bind('invalidfound', function (e, error) {
-            var field = $(error.field),
-                fieldId = field.attr('id'),
+    function onInvalidFoundCallback(e, error) {
+        var field = $(error.field),
+            fieldId = field.attr('id'),
 
-                // default error message
-                // msg = 'Error found: ' + error.name,
-                msg = getMessage(error.name),
-                msgType = typeof msg,
-                label;
+            // default error message
+            // msg = 'Error found: ' + error.name,
+            msg = $.yafov.getMessage(error.name),
+            msgType = typeof msg,
+            label;
 
-            if (msgType === 'function') {
-                msg = msg(error);
-            } else if (msgType === 'undefined') {
-                msg = 'Error found: ' + error.name;
-            }
+        if (msgType === 'function') {
+            msg = msg(error);
+        } else if (msgType === 'undefined') {
+            msg = 'Error found: ' + error.name;
+        }
 
-            // add error class to field
-            field.addClass('error').removeClass('valid');
+        // add error class to field
+        field.addClass('error').removeClass('valid');
 
-            label = $('<label />');
-            label.addClass('error').attr('for', fieldId).text(msg);
-            // remove existing error message
-            field.parent().find('label.error').remove()
-            // add new error message
-                .end().append(label);
-        });
+        label = $('<label />');
+        label.addClass('error').attr('for', fieldId).text(msg);
 
-        // Listen to validfound event and remove the error message if needed
-        validator.bind('validfound', function (e, error, element) {
-            var field = $(error.field);
-            field.removeClass('error').addClass('valid');
-            field.parent().find('label.error').remove();
-        });
+        // remove existing error message
+        // add new error message
+        field.parent().find('label.error').remove().end().append(label);
+    }
+
+    function onValidFoundCallback(e, error) {
+        var field = $(error.field);
+        field.removeClass('error').addClass('valid');
+        field.parent().find('label.error').remove();
+    }
+    $.yafov.onValidFound = onValidFoundCallback;
+    $.yafov.onInvalidFound = onInvalidFoundCallback;
+
+    $.fn.yafov = function (options) {
+        var validator, onInvalidFound, onValidFound;
+
+        options = options || {};
+
+        validator = yafov.call(this, options);
+
+        onInvalidFound = typeof options.onInvalidFound === 'function' ?
+                    options.onInvalidFound : onInvalidFoundCallback;
+        onValidFound = typeof options.onValidFound === 'function' ?
+                    options.onInvalidFound : onValidFoundCallback;
+
+        // Listen to invalidfound event
+        validator.bind('invalidfound', onInvalidFound);
+
+        // Listen to validfound event
+        validator.bind('validfound', onValidFound);
 
         return validator;
     };

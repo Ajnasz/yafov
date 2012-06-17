@@ -21,12 +21,12 @@ THE SOFTWARE.
 */
 /**
  * yafov
+ * Event based and highly customizable form validator plugin for jQuery.
  * A fork of https://github.com/dilvie/h5Validate
  */
 
-/*global jQuery, window */
-/*jslint browser: true, devel: true, undef: true, nomen: true,
-        bitwise: true, regexp: true, newcap: true */
+/*global jQuery */
+/*jslint browser: true, devel: true, undef: true, bitwise: true, regexp: true, newcap: true */
 (function ($) {
     "use strict";
     var yafov, defaults, patternLibrary, validatorMethods, methods;
@@ -36,21 +36,45 @@ THE SOFTWARE.
 
             // Setup KB event delegation.
             kbSelectors: ':input:not(:submit,:button)',
-            focusout: true,
+            /**
+             * Validate on focus out event
+             * @property {Boolean} focusout
+             * @default false
+             */
+            focusout: false,
+            /**
+             * Validate on focus in event
+             * @property {Boolean} focusin
+             * @default false
+             */
             focusin: false,
+            /**
+             * Validate on change event
+             * @property {Boolean} change
+             * @default true
+             */
             change: true,
+            /**
+             * Validate on keyup event
+             * @property {Boolean} keyup
+             * @default keyup
+             */
             keyup: false,
+            /**
+             * Validate on click event
+             * @property {Boolean} click
+             * @default true
+             */
+            click: true,
+            /**
+             * Validate on form submit event
+             * @property {Boolean} submit
+             * @default true
+             */
+            submit: true,
 
             // Setup mouse event delegation.
-            mSelectors: '[type="range"], :radio, :checkbox, select, option',
-            click: true,
-
-            // activeKeyup: true,
-
-            // stripMarkup: true,
-
-            // Validate on submit?
-            submit: true
+            mSelectors: '[type="range"], :radio, :checkbox, select, option'
         }
     };
 
@@ -62,105 +86,107 @@ THE SOFTWARE.
             /* an object to store the method indexes by their name */
             methodsByName = {},
             groupMethodsByName = {},
-            interf = {
-                /**
-                 * When we add a new validator a name must be given. If a
-                 * validator already exists with the same name, it will be
-                 * overwritten
-                 * @param String name the name of the validator, eg.: required, number
-                 * @param jQuerySelectorString selector The selector of the
-                 * element what should match. Only those elements will be
-                 * validated which are matching to this selector (see
-                 * $(element).is('selector'))
-                 * @param Function fn The validator function. The function must handle 3 arguments:
-                 * value: the current value of the element: which the
-                 *   $(element).val() except for checboxes and radio fields,
-                 *   because then $(element).is(':checked')
-                 * element: the element which needs to be validated (jQuery object)
-                 * callback: a callback function what you should call when you
-                 *   figured out that the element is valid or not. You must
-                 *   pass the result as a boolean. It must bee true if the
-                 *   field is valid or false if it's invalid
-                 */
-                add: function (selector, name, fn) {
-                    var existIndex, index, item;
+            interf;
 
-                    existIndex = interf.indexByName(name);
-                    index = existIndex > -1 ? existIndex : methods.length;
-                    item = {
-                        selector: selector,
-                        fn: fn,
-                        name: name
-                    };
-                    methodsByName[name] = index;
-                    methods[index] = item;
-                },
-                /**
-                 * When we add a new validator a name must be given. If a
-                 * validator already exists with the same name, it will be
-                 * overwritten
-                 * @param String name the name of the validator, eg.: required, number
-                 * @param jQuerySelectorString selector The selector of the
-                 * element what should match. Only those elements will be
-                 * validated which are matching to this selector (see
-                 * $(element).is('selector'))
-                 * @param Function fn The validator function. The function must handle 3 arguments:
-                 * value: the current value of the element: which the
-                 *   $(element).val() except for checboxes,
-                 *   because then $(element).is(':checked')
-                 * element: the element which needs to be validated (jQuery object)
-                 * callback: a callback function what you should call when you
-                 *   figured out that the element is valid or not. You must
-                 *   pass the result as a boolean. It must bee true if the
-                 *   field is valid or false if it's invalid
-                 */
-                addGroup: function (selector, name, fn, getGroupItems) {
-                    var existIndex, index, item;
+        interf = {
+            /**
+                * When we add a new validator a name must be given. If a
+                * validator already exists with the same name, it will be
+                * overwritten
+                * @param String name the name of the validator, eg.: required, number
+                * @param jQuerySelectorString selector The selector of the
+                * element what should match. Only those elements will be
+                * validated which are matching to this selector (see
+                * $(element).is('selector'))
+                * @param Function fn The validator function. The function must handle 3 arguments:
+                * value: the current value of the element: which the
+                *   $(element).val() except for checboxes and radio fields,
+                *   because then $(element).is(':checked')
+                * element: the element which needs to be validated (jQuery object)
+                * callback: a callback function what you should call when you
+                *   figured out that the element is valid or not. You must
+                *   pass the result as a boolean. It must bee true if the
+                *   field is valid or false if it's invalid
+                */
+            add: function (selector, name, fn) {
+                var existIndex, index, item;
 
-                    existIndex = interf.indexByName(name, true);
-                    index = existIndex > -1 ? existIndex : interf.len(true);
-                    item = {
-                        selector: selector,
-                        fn: fn,
-                        name: name,
-                        getGroupItems: getGroupItems
-                    };
-                    groupMethodsByName[name] = index;
-                    groupMethods[index] = item;
-                },
-                /**
-                 * method to get the validator object's index by it's name
-                 * @param String name the name of the validator
-                 * @param Boolean isGroup if true, it will search in group methods
-                 */
-                indexByName: function (name, isGroup) {
-                    var index = isGroup ? groupMethodsByName[name] : methodsByName[name];
-                    return typeof index !== 'undefined' ? index : -1;
-                },
-                /**
-                 * method to get the validator object by it's index
-                 * @param Int the index of the validator
-                 */
-                get: function (index, isGroup) {
-                    return interf.getAll(isGroup)[index];
-                },
-                getAll: function (isGroup) {
-                    return isGroup ? groupMethods : methods;
-                },
-                /**
-                 * method to get the validator object by it's name
-                 * @param String the name of the validator
-                 */
-                getByName: function (name, isGroup) {
-                    return interf.get(interf.indexByName(name, isGroup), isGroup);
-                },
-                /**
-                 * Method to get the number of the validators have added
-                 */
-                len: function (isGroup) {
-                    return isGroup ? groupMethods.length : methods.length;
-                }
-            };
+                existIndex = interf.indexByName(name);
+                index = existIndex > -1 ? existIndex : methods.length;
+                item = {
+                    selector: selector,
+                    fn: fn,
+                    name: name
+                };
+                methodsByName[name] = index;
+                methods[index] = item;
+            },
+            /**
+                * When we add a new validator a name must be given. If a
+                * validator already exists with the same name, it will be
+                * overwritten
+                * @param String name the name of the validator, eg.: required, number
+                * @param jQuerySelectorString selector The selector of the
+                * element what should match. Only those elements will be
+                * validated which are matching to this selector (see
+                * $(element).is('selector'))
+                * @param Function fn The validator function. The function must handle 3 arguments:
+                * value: the current value of the element: which the
+                *   $(element).val() except for checboxes,
+                *   because then $(element).is(':checked')
+                * element: the element which needs to be validated (jQuery object)
+                * callback: a callback function what you should call when you
+                *   figured out that the element is valid or not. You must
+                *   pass the result as a boolean. It must bee true if the
+                *   field is valid or false if it's invalid
+                */
+            addGroup: function (selector, name, fn, getGroupItems) {
+                var existIndex, index, item;
+
+                existIndex = interf.indexByName(name, true);
+                index = existIndex > -1 ? existIndex : interf.len(true);
+                item = {
+                    selector: selector,
+                    fn: fn,
+                    name: name,
+                    getGroupItems: getGroupItems
+                };
+                groupMethodsByName[name] = index;
+                groupMethods[index] = item;
+            },
+            /**
+                * method to get the validator object's index by it's name
+                * @param String name the name of the validator
+                * @param Boolean isGroup if true, it will search in group methods
+                */
+            indexByName: function (name, isGroup) {
+                var index = isGroup ? groupMethodsByName[name] : methodsByName[name];
+                return typeof index !== 'undefined' ? index : -1;
+            },
+            /**
+                * method to get the validator object by it's index
+                * @param Int the index of the validator
+                */
+            get: function (index, isGroup) {
+                return interf.getAll(isGroup)[index];
+            },
+            getAll: function (isGroup) {
+                return isGroup ? groupMethods : methods;
+            },
+            /**
+                * method to get the validator object by it's name
+                * @param String the name of the validator
+                */
+            getByName: function (name, isGroup) {
+                return interf.get(interf.indexByName(name, isGroup), isGroup);
+            },
+            /**
+                * Method to get the number of the validators have added
+                */
+            len: function (isGroup) {
+                return isGroup ? groupMethods.length : methods.length;
+            }
+        };
         // finally return the interface
         return interf;
     }());
@@ -446,6 +472,10 @@ THE SOFTWARE.
                 this.submit(onSubmit);
             }
 
+            this.settings = function getSettings() {
+                return settings;
+            };
+
             return this.each(function () {
                 var kbEvents, mEvents;
                 kbEvents = {
@@ -547,13 +577,14 @@ THE SOFTWARE.
             addGroupMethod(selector, name, fn, getGroupItems);
         },
         /**
+         * Returns the default settings
          * @method getDefaults
-         *
          */
         getDefaults: function getDefaults() {
             return defaults;
         },
         /**
+         * Sets (extends) the default settngs
          * @method setDefaults
          * @param {Object} options
          */
