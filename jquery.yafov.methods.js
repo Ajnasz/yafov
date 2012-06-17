@@ -213,7 +213,7 @@ THE SOFTWARE.
                     form = elem.closest('form'),
                     elements;
 
-                elements = form.find('input[type="radio"][name="' + elem.attr('name') + '"]');
+                elements = form.find(':radio[name="' + elem.attr('name') + '"]');
                 return elements;
             }
         ]
