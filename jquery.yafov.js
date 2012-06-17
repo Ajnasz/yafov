@@ -50,10 +50,7 @@ THE SOFTWARE.
             // stripMarkup: true,
 
             // Validate on submit?
-            submit: true,
-
-            // Elements to validate with allValid (only validating visible elements)
-            allValidSelectors: 'input:visible, textarea:visible, select:visible'
+            submit: true
         }
     };
 
@@ -247,37 +244,25 @@ THE SOFTWARE.
                 isGroup: isGroup
             },
             // method run when a validation finished
-            onValidate,
-            validatorItemCb,
-            value,
-            validate;
+            value;
 
           // get the value once, so it gonna be cached
         value = ($this.is('[type=checkbox]')) ?  $this.is(':checked') : $this.val();
 
-        validate = function () {
-            var validator = validatorMethods.get(index, isGroup);
-            // check if need to validate
-            if (result.isValid && $this.is(validator.selector)) {
-                result.name = validator.name;
-                validateWith($this, validator.name, validatorItemCb, value, isGroup);
-            } else {
-                onValidate();
-            }
-        };
-        onValidate = function () {
+        function onValidate(next) {
             if (index + 1 < vl) {
                 index += 1;
-                validate();
+                next();
             } else {
                 cb(result);
             }
-        };
-        // the elem gonna be all the elements which were validated by this validatior action
-        // normally it's the same what we pass ($this) to the validateWith
-        // function, but when it's a group validator then all of the elements
-        // will be listed here
-        validatorItemCb = function (valid, validatedElements) {
+        }
+        // the elem gonna be all the elements which were validated
+        // by this validatior action normally it's the same what we
+        // pass ($this) to the validateWith function, but when it's
+        // a group validator then all of the elements will be
+        // listed here
+        function validatorItemCb(valid, validatedElements) {
             // update result
             result.isValid = valid;
             result.field = validatedElements;
@@ -285,15 +270,30 @@ THE SOFTWARE.
             if (!valid) {
                 index = vl - 1;
             }
-            onValidate();
-        };
-        validate(index);
+            onValidate(validate);
+        }
+        function validate() {
+            // check if need to validate
+            if (!result.isValid) {
+                onValidate(validate);
+                return;
+            }
+            var validator = validatorMethods.get(index, isGroup);
+            if (!$this.is(validator.selector)) {
+                onValidate(validate);
+                return;
+            }
+            result.name = validator.name;
+            validateWith($this, validator.name,
+                validatorItemCb, value, isGroup);
+        }
+        validate();
     }
 
     methods = {
         validate: function validate(element, cb) {
             var $element = $(element);
-            validateElement($element[0], function validateElement(result) {
+            validateElement($element[0], function validateElementCallback(result) {
                 if (result.isValid) {
                     $element.trigger('validfound', result);
                 } else {
@@ -348,7 +348,7 @@ THE SOFTWARE.
         */
         bindDelegation: function bindDelegates(settings) {
             // bind to forms
-            this.filter('form').attr('novalidate', 'novalidate')
+            this.filter('form').attr('novalidate', 'novalidate').end()
                 .find('form').attr('novalidate', 'novalidate')
                 .parents('form').attr('novalidate', 'novalidate');
 
