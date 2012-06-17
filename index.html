@@ -168,6 +168,7 @@
 		<script type="text/javascript" src="jquery.js"></script>
 		<script type="text/javascript" src="jquery.yafov.js"></script>
 		<script type="text/javascript" src="jquery.yafov.methods.js"></script>
+		<script type="text/javascript" src="jquery.yafov.ui.js"></script>
 
     <script type="text/javascript">
 $(document).ready(function () {
@@ -233,7 +234,7 @@ $(document).ready(function () {
          */
         function datetestGetGroupItems(elem) {
             // in that example we keep the elements of a group in a div which has a "row" class
-            var form = elem.closest('.row'),
+            var form = elem.form || elem.closest('.row'),
                 elements;
 
             // collect all elements with datest class in the row div
@@ -243,8 +244,9 @@ $(document).ready(function () {
     );
 
     // Initialize the validator
-    var validator = $('#NewTypes').yafov();
+    var validator = $('#NewTypes').yafovUI();
 
+    /*
     // Listen to invalidfound event and show error
     // Every time the validator finds an invalid element, the invalidfound
     // event will be triggered
@@ -297,6 +299,7 @@ $(document).ready(function () {
         field.removeClass('error').addClass('valid');
         field.parent().find('label.error').remove();
     });
+    */
 
     // Listen to formvalid event and submit the form
     validator.bind('formvalid', function (e, args) {
