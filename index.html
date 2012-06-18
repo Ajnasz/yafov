@@ -259,13 +259,13 @@ $(document).ready(function () {
     });
 
     // Listen to formvalid event and submit the form
-    validator.bind('formvalid', function (e, args) {
+    validator.bind($.yafov.events.FORM_VALID, function (e, args) {
         // this.submit();
         $('#Messages').text('the form is valid').addClass('hasMessage');
     });
 
     // Listen to forminvalid and do nothing now :) You may wan't to log the issues
-    validator.bind('forminvalid', function (e, args) {
+    validator.bind($.yafov.events.FORM_INVALID, function (e, args) {
         $('#Messages').text('the form is invalid').addClass('hasMessage');
         // scroll to the first invalid element
         window.scrollTo(0, args.errors[0].field.parent().position().top - 10);

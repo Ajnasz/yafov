@@ -146,16 +146,16 @@ THE SOFTWARE.
                     options.onInvalidFound : onValidFoundCallback;
 
         // Listen to invalidfound event
-        validator.bind('invalidfound', onInvalidFound);
+        validator.bind($.yafov.events.INVALID_FOUND, onInvalidFound);
 
         // Listen to validfound event
-        validator.bind('validfound', onValidFound);
+        validator.bind($.yafov.events.VALID_FOUND, onValidFound);
 
-        validator.bind('validateStart', function (e, element) {
+        validator.bind($.yafov.events.VALIDATE_START, function (e, element) {
             $(element).addClass('load');
         });
 
-        validator.bind('validateFinish', function (e, element) {
+        validator.bind($.yafov.events.VALIDATE_FINISH, function (e, element) {
             $(element).removeClass('load');
         });
 

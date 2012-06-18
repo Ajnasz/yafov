@@ -29,7 +29,7 @@ THE SOFTWARE.
 /*jslint browser: true, devel: true, undef: true, bitwise: true, regexp: true, newcap: true */
 (function ($) {
     "use strict";
-    var yafov, defaults, patternLibrary, validatorMethods, methods;
+    var yafov, defaults, patternLibrary, validatorMethods, methods, yafovEvents;
     yafov = { // Public API
         defaults: {
             debug: false,
@@ -76,6 +76,15 @@ THE SOFTWARE.
             // Setup mouse event delegation.
             mSelectors: '[type="range"], :radio, :checkbox, select, option'
         }
+    };
+
+    yafovEvents = {
+        VALID_FOUND: 'validFound',
+        INVALID_FOUND: 'invalidFound',
+        VALIDATE_START: 'validateStart',
+        VALIDATE_FINISH: 'validateFinish',
+        FORM_VALID: 'formValid',
+        FORM_INVALID: 'formInvalid'
     };
 
     defaults = yafov.defaults;
@@ -280,7 +289,7 @@ THE SOFTWARE.
                 index += 1;
                 next();
             } else {
-                $this.trigger('validateFinish', $this);
+                $this.trigger(yafovEvents.VALIDATE_FINISH, $this);
                 cb(result);
             }
         }
@@ -300,7 +309,7 @@ THE SOFTWARE.
             onValidate(validate);
         }
         function validate() {
-            $this.trigger('validateStart', $this);
+            $this.trigger(yafovEvents.VALIDATE_START, $this);
             // check if need to validate
             if (!result.isValid) {
                 onValidate(validate);
@@ -323,9 +332,9 @@ THE SOFTWARE.
             var $element = $(element);
             validateElement($element[0], function validateElementCallback(result) {
                 if (result.isValid) {
-                    $element.trigger('validfound', result);
+                    $element.trigger(yafovEvents.VALID_FOUND, result);
                 } else {
-                    $element.trigger('invalidfound', result);
+                    $element.trigger(yafovEvents.INVALID_FOUND, result);
                 }
                 if (typeof cb === 'function') {
                     cb(result);
@@ -402,9 +411,9 @@ THE SOFTWARE.
                     if (fieldsValidated && groupFieldsValidated) {
                         if (errors.length < 1) {
                             errors = null;
-                            form.trigger('formvalid');
+                            form.trigger(yafovEvents.FORM_VALID);
                         } else {
-                            form.trigger('forminvalid', {errors: errors});
+                            form.trigger(yafovEvents.FORM_INVALID, {errors: errors});
                         }
                     }
                 }
@@ -592,7 +601,8 @@ THE SOFTWARE.
          */
         setDefaults: function setDefaults(options) {
             $.extend(defaults, options);
-        }
+        },
+        events: yafovEvents
     };
 
     $.fn.yafov = function (options) {
