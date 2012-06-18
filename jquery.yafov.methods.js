@@ -55,7 +55,7 @@ THE SOFTWARE.
      * Predefined validator methods
      */
     $([
-        /*
+        /**
          * value shouldn't be empty
          * <input type="text" required />
          * <input type="text" class="required" />
@@ -64,7 +64,7 @@ THE SOFTWARE.
             var valid = !!value;
             cb(valid);
         }],
-        /*
+        /**
          * value must be a valid url
          * <input type="url" />
          * <input type="text" class="url" />
@@ -74,7 +74,7 @@ THE SOFTWARE.
                 patterns.url.test(value);
             cb(valid);
         }],
-        /*
+        /**
          * value must be a valid email address
          * <input type="email" />
          * <input type="text" class="email" />
@@ -84,7 +84,7 @@ THE SOFTWARE.
                 patterns.email.test(value);
             cb(valid);
         }],
-        /*
+        /**
          * value must be a valid tel number
          * <input type="tel" />
          * <input type="text" class="tel" />
@@ -94,7 +94,7 @@ THE SOFTWARE.
                 patterns.phone.test(value);
             cb(valid);
         }],
-        /*
+        /**
          * value must contain only numeric chars
          * <input type="text" class="numeric" />
          */
@@ -105,7 +105,7 @@ THE SOFTWARE.
                 (value !== null && value !== '' && !isNaN(+value));
             cb(valid);
         }],
-        /*
+        /**
          * Value must be equal or less then max and more or equal then min
          * range validator: <input type="text" min="3" max="5" ...
          */
@@ -125,7 +125,7 @@ THE SOFTWARE.
                 cb(true);
             }
         }],
-        /*
+        /**
          * Value must be equal or less
          * max validator: <input type="text" max="5" ...
          */
@@ -145,7 +145,7 @@ THE SOFTWARE.
                 cb(valid);
             }, false);
         }],
-        /*
+        /**
          * Value must be equal or more
          * min validator: <input type="text" min="5" ...
          */
@@ -166,7 +166,7 @@ THE SOFTWARE.
             }, false);
 
         }],
-        /*
+        /**
          * value must contain only alpha chars
          * <input type="text" class="alpha" />
          */
@@ -175,7 +175,7 @@ THE SOFTWARE.
                         patterns.alpha.test(value);
             cb(valid);
         }],
-        /*
+        /**
          * value must contain only alphanumeric chars
          * <input type="text" class="alphanumeric" />
          */
@@ -188,7 +188,7 @@ THE SOFTWARE.
         $.yafov.addMethod.apply(null, this);
     });
     $([
-        /*
+        /**
          * value shouldn't be empty
          * <input type="text" required />
          * <input type="text" class="required" />
@@ -200,7 +200,7 @@ THE SOFTWARE.
                 var valid = element.filter(':checked').length > 0;
                 cb(valid);
             },
-            /*
+            /**
              * collects all elements which belongs to the group
              * one parameter, which is the reference element
              */
