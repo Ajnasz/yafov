@@ -280,6 +280,7 @@ THE SOFTWARE.
                 index += 1;
                 next();
             } else {
+                $this.trigger('validateFinish', $this);
                 cb(result);
             }
         }
@@ -299,6 +300,7 @@ THE SOFTWARE.
             onValidate(validate);
         }
         function validate() {
+            $this.trigger('validateStart', $this);
             // check if need to validate
             if (!result.isValid) {
                 onValidate(validate);

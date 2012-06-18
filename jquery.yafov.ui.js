@@ -121,7 +121,7 @@ THE SOFTWARE.
         label.addClass('error').attr('for', fieldId).text(msg);
 
         // remove existing error message
-        // add new error message
+        // add new error message at the end
         field.parent().find('label.error').remove().end().append(label);
     }
 
@@ -150,6 +150,14 @@ THE SOFTWARE.
 
         // Listen to validfound event
         validator.bind('validfound', onValidFound);
+
+        validator.bind('validateStart', function (e, element) {
+            $(element).addClass('load');
+        });
+
+        validator.bind('validateFinish', function (e, element) {
+            $(element).removeClass('load');
+        });
 
         return validator;
     };

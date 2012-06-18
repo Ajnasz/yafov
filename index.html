@@ -174,12 +174,10 @@
 $(document).ready(function () {
     // add custom method
     $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
-        $(element).addClass('load');
         // imagine that this is an ajax call, and the function is the callback
         setTimeout(function () {
             var isValid = value !== '123';
             cb(isValid);
-            $(element).removeClass('load');
         }, 1000);
     });
 
