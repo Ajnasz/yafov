@@ -181,6 +181,7 @@ $(document).ready(function () {
             cb(isValid);
         }, 1000);
     });
+    $.yafov.setMessage('telfoobar', 'value shouldn\'t be 123');
 
     // add a custom group validator
     // that going to handle 3 elements as one
@@ -241,6 +242,7 @@ $(document).ready(function () {
             return elements;
         }
     );
+    $.yafov.setMessage('datetest', 'The date must be later than today');
 
     // Initialize the validator
     var validator = $('#NewTypes').yafov({
