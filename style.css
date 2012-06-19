@@ -205,7 +205,7 @@ code {
   font-family: monospace;
 }
 
-label.error {
+label.invalid {
   color: red;
   font-size: 11px;
 }
@@ -235,7 +235,7 @@ form > fieldset .row  {
     float: right;
 }
 
-input.error {
+input.invalid {
   border-color: #f00;
 }
 
@@ -243,7 +243,7 @@ input.valid {
   border-color: #89B020;
 }
 
-input.load {
+input.progress {
   border-color: #208AB0;
   background-color: #E0F7FF;
 }

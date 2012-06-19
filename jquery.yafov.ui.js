@@ -26,13 +26,20 @@ THE SOFTWARE.
  */
 (function ($) {
 
-    var messages = {}, yafov = $.fn.yafov;
+    var messages = {}, yafov = $.fn.yafov, classes;
     function getMessage(which) {
         return messages[which];
     }
     function setMessage(name, msg) {
         messages[name] = msg;
     }
+
+    classes = {
+        INVALID_ELEMENT: 'invalid',
+        VALID_ELEMENT: 'valid',
+        PROGRESS_ELEMENT: 'progress'
+    };
+    $.yafov.classes = classes;
 
     /**
      * Add new or overwrite existing error messages for different valiator methods
@@ -101,6 +108,7 @@ THE SOFTWARE.
     function onInvalidFoundCallback(e, error) {
         var field = $(error.field),
             fieldId = field.attr('id'),
+            parent = field.parent(),
 
             // default error message
             // msg = 'Error found: ' + error.name,
@@ -115,20 +123,21 @@ THE SOFTWARE.
         }
 
         // add error class to field
-        field.addClass('error').removeClass('valid');
+        field.addClass($.yafov.classes.INVALID_ELEMENT).removeClass($.yafov.classes.VALID_ELEMENT);
 
         label = $('<label />');
-        label.addClass('error').attr('for', fieldId).text(msg);
+        label.addClass($.yafov.classes.INVALID_ELEMENT).attr('for', fieldId).text(msg);
 
         // remove existing error message
         // add new error message at the end
-        field.parent().find('label.error').remove().end().append(label);
+        parent.find('label').filter($.yafov.classes.INVALID_ELEMENT).remove();
+        parent.append(label);
     }
 
     function onValidFoundCallback(e, error) {
         var field = $(error.field);
-        field.removeClass('error').addClass('valid');
-        field.parent().find('label.error').remove();
+        field.removeClass($.yafov.classes.INVALID_ELEMENT).addClass($.yafov.classes.VALID_ELEMENT);
+        field.parent().find('label').filter($.yafov.classes.INVALID_ELEMENT).remove();
     }
     $.yafov.onValidFound = onValidFoundCallback;
     $.yafov.onInvalidFound = onInvalidFoundCallback;
@@ -152,11 +161,11 @@ THE SOFTWARE.
         validator.bind($.yafov.events.VALID_FOUND, onValidFound);
 
         validator.bind($.yafov.events.VALIDATE_START, function (e, element) {
-            $(element).addClass('load');
+            $(element).addClass($.yafov.classes.PROGRESS_ELEMENT);
         });
 
         validator.bind($.yafov.events.VALIDATE_FINISH, function (e, element) {
-            $(element).removeClass('load');
+            $(element).removeClass($.yafov.classes.PROGRESS_ELEMENT);
         });
 
         return validator;
