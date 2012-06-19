@@ -130,14 +130,14 @@ THE SOFTWARE.
 
         // remove existing error message
         // add new error message at the end
-        parent.find('label').filter($.yafov.classes.INVALID_ELEMENT).remove();
+        parent.find('label').filter('.' + $.yafov.classes.INVALID_ELEMENT).remove();
         parent.append(label);
     }
 
     function onValidFoundCallback(e, error) {
         var field = $(error.field);
         field.removeClass($.yafov.classes.INVALID_ELEMENT).addClass($.yafov.classes.VALID_ELEMENT);
-        field.parent().find('label').filter($.yafov.classes.INVALID_ELEMENT).remove();
+        field.parent().find('label').filter('.' + $.yafov.classes.INVALID_ELEMENT).remove();
     }
     $.yafov.onValidFound = onValidFoundCallback;
     $.yafov.onInvalidFound = onInvalidFoundCallback;
