@@ -259,11 +259,55 @@ THE SOFTWARE.
         return matching;
     }
 
+    function onValidate(props, next) {
+        if (props.index + 1 < props.methodsLength) {
+            props.index += 1;
+            next(props);
+        } else {
+            props.that.trigger(yafovEvents.VALIDATE_FINISH, props.that);
+            props.cb(props.result);
+        }
+    }
+
+
+    // the elem gonna be all the elements which were validated
+    // by this validatior action normally it's the same what we
+    // pass ($this) to the validateWith function, but when it's
+    // a group validator then all of the elements will be
+    // listed here
+    function validatorItemCb(props, valid, validatedElements) {
+        // update result
+        props.result.isValid = valid;
+        props.result.field = validatedElements;
+        // if not valid make sure we don't run the next validator
+        if (!valid) {
+            props.index = props.methodsLength - 1;
+        }
+        onValidate(props, props.validate);
+    }
+    function validate(props) {
+        props.that.trigger(yafovEvents.VALIDATE_START, props.that);
+        // check if need to validate
+        if (!props.result.isValid) {
+            onValidate(props, validate);
+            return;
+        }
+        var validator = validatorMethods.get(props.index, props.isGroup);
+        if (!props.that.is(validator.selector)) {
+            onValidate(props, validate);
+            return;
+        }
+        props.result.name = validator.name;
+        validateWith(props.that, validator.name,
+            function (valid, validatedElements) {
+                validatorItemCb(props, valid, validatedElements);
+            }, props.value, props.isGroup);
+    }
     /**
      *
      */
     function validateElement(element, cb) {
-        var $this = $(element),
+        var that = $(element),
 
             isGroup = isGroupElement(element),
 
@@ -275,60 +319,31 @@ THE SOFTWARE.
             result = {
                 isValid: true,
                 name: '',
-                field: $this,
+                field: that,
                 isGroup: isGroup
             },
+            props,
             // method run when a validation finished
             value;
-
           // get the value once, so it gonna be cached
-        value = ($this.is('[type=checkbox]')) ?  $this.is(':checked') : $this.val();
+        value = (that.is('[type=checkbox]')) ?  that.is(':checked') : that.val();
 
-        function onValidate(next) {
-            if (index + 1 < vl) {
-                index += 1;
-                next();
-            } else {
-                $this.trigger(yafovEvents.VALIDATE_FINISH, $this);
-                cb(result);
-            }
-        }
-        // the elem gonna be all the elements which were validated
-        // by this validatior action normally it's the same what we
-        // pass ($this) to the validateWith function, but when it's
-        // a group validator then all of the elements will be
-        // listed here
-        function validatorItemCb(valid, validatedElements) {
-            // update result
-            result.isValid = valid;
-            result.field = validatedElements;
-            // if not valid make sure we don't run the next validator
-            if (!valid) {
-                index = vl - 1;
-            }
-            onValidate(validate);
-        }
-        function validate() {
-            $this.trigger(yafovEvents.VALIDATE_START, $this);
-            // check if need to validate
-            if (!result.isValid) {
-                onValidate(validate);
-                return;
-            }
-            var validator = validatorMethods.get(index, isGroup);
-            if (!$this.is(validator.selector)) {
-                onValidate(validate);
-                return;
-            }
-            result.name = validator.name;
-            validateWith($this, validator.name,
-                validatorItemCb, value, isGroup);
-        }
-        validate();
+        props = {
+            index: 0,
+            result: result,
+            that: that,
+            cb: cb,
+            methodsLength: vl,
+            validate: validate,
+            isGroup: isGroup,
+            value: value
+        };
+
+        validate(props);
     }
 
     methods = {
-        validate: function validate(element, cb) {
+        validate: function validateInnerMethod(element, cb) {
             var $element = $(element);
             validateElement($element[0], function validateElementCallback(result) {
                 if (result.isValid) {
@@ -346,11 +361,11 @@ THE SOFTWARE.
          * Take the event preferences and delegate the events to selected
          * objects.
          *
-         * @param {object} eventFlags The object containing event flags.
+         * @param {object} flags The object containing event flags.
          *
          * @returns {element} The passed element (for method chaining).
          */
-        delegateEvents: function delegateEvents(selectors, eventFlags, element, settings) {
+        delegateEvents: function delegateEventsInnerMethod(selectors, flags, element, settings) {
             var events = [],
                 $element = $(element),
                 key,
@@ -361,7 +376,7 @@ THE SOFTWARE.
                 methods.validate(e.target);
             }
 
-            $.each(eventFlags, function (key, value) {
+            $.each(flags, function (key, value) {
                 if (value) {
                     events.push(key);
                 }
@@ -382,7 +397,7 @@ THE SOFTWARE.
          *
          * @returns {object} jQuery object for chaining.
          */
-        bindDelegation: function bindDelegates(settings) {
+        bindDelegation: function bindDelegatesInnerMethod(settings) {
             // bind to forms
             this.filter('form').attr('novalidate', 'novalidate').end()
                 .find('form').attr('novalidate', 'novalidate')
