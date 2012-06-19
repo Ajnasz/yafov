@@ -259,6 +259,9 @@ THE SOFTWARE.
         return matching;
     }
 
+    /**
+     * Called on an item validation until all validator methods are called
+     */
     function onValidate(props, next) {
         if (props.index + 1 < props.methodsLength) {
             props.index += 1;
@@ -270,11 +273,11 @@ THE SOFTWARE.
     }
 
 
-    // the elem gonna be all the elements which were validated
-    // by this validatior action normally it's the same what we
-    // pass ($this) to the validateWith function, but when it's
-    // a group validator then all of the elements will be
-    // listed here
+    /**
+     * Callback function of validateWith
+     * Checks the result and sets the properties of the props, which stores all
+     * data of a element validation
+     */
     function validatorItemCb(props, valid, validatedElements) {
         // update result
         props.result.isValid = valid;
@@ -285,6 +288,13 @@ THE SOFTWARE.
         }
         onValidate(props, props.validate);
     }
+
+    /**
+     * Calls validateWith on an element.
+     * If the element already marked as invalid, only calls back to the
+     * onValidate method.
+     * @private
+     */
     function validate(props) {
         props.that.trigger(yafovEvents.VALIDATE_START, props.that);
         // check if need to validate
@@ -433,8 +443,8 @@ THE SOFTWARE.
                 }
                 function collectInvalids(fields, group) {
                     var validated = 0;
-                    return function () {
-                        methods.validate(this, function (result) {
+                    return function invalidCollector() {
+                        methods.validate(this, function validateCallback(result) {
                             if (result.isValid !== true) {
                                 errors.push(result);
                             }
@@ -473,7 +483,7 @@ THE SOFTWARE.
                 // But that would require to make the getGroupItems too
                 // complex (which isn't so simple already)
                 if (groupFields.length > 0) {
-                    groupFields.each(function (gfIndex, field) {
+                    groupFields.each(function groupFieldCollector(gfIndex, field) {
                         // create a jquery object from the field, because in the
                         // collector probably that will be used and then don't need
                         // to get an object each time the getGroupItems method
@@ -501,7 +511,7 @@ THE SOFTWARE.
                 return settings;
             };
 
-            return this.each(function () {
+            return this.each(function eventDelgator() {
                 var kbEvents, mEvents;
                 kbEvents = {
                     focusout: settings.focusout,
