@@ -355,12 +355,11 @@ THE SOFTWARE.
                 $element = $(element),
                 key,
                 i,
-                el,
-                validate;
+                el;
 
-            validate = function validate(e) {
-                methods.validate(this);
-            };
+            function validateOnElementEvent(e) {
+                methods.validate(e.target);
+            }
 
             $.each(eventFlags, function (key, value) {
                 if (value) {
@@ -371,7 +370,7 @@ THE SOFTWARE.
             key = 0;
 
             for (i = 0, el = events.length; i < el; i += 1) {
-                $element.delegate(selectors, events[i] + '.yafov', validate);
+                $element.delegate(selectors, events[i] + '.yafov', validateOnElementEvent);
             }
             return element;
         },
