@@ -2,7 +2,8 @@
 <html>
 	<head>
 		<title>yafov - Yet Another Form Validator plugin for jQuery</title>
-    <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="style.css" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	</head>
 	<body>
     <a href="https://github.com/Ajnasz/yafov"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
@@ -164,21 +165,23 @@
         <script src="https://gist.github.com/1455919.js"> </script>
       </div>
     </div>
-		<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
-		<script type="text/javascript" src="jquery.yafov.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+    <!--<script type="text/javascript" src="jquery.js"></script>-->
+    <script type="text/javascript" src="jquery.yafov.js"></script>
+    <script type="text/javascript" src="jquery.yafov.methods.js"></script>
+    <script type="text/javascript" src="jquery.yafov.ui.js"></script>
 
     <script type="text/javascript">
 $(document).ready(function () {
     // add custom method
     $.yafov.addMethod('[type="tel"]', 'telfoobar', function (value, element, cb) {
-        $(element).addClass('load');
         // imagine that this is an ajax call, and the function is the callback
         setTimeout(function () {
             var isValid = value !== '123';
             cb(isValid);
-            $(element).removeClass('load');
         }, 1000);
     });
+    $.yafov.setMessage('telfoobar', 'value shouldn\'t be 123');
 
     // add a custom group validator
     // that going to handle 3 elements as one
@@ -231,7 +234,7 @@ $(document).ready(function () {
          */
         function datetestGetGroupItems(elem) {
             // in that example we keep the elements of a group in a div which has a "row" class
-            var form = elem.closest('.row'),
+            var form = elem.form || elem.closest('.row'),
                 elements;
 
             // collect all elements with datest class in the row div
@@ -239,71 +242,30 @@ $(document).ready(function () {
             return elements;
         }
     );
+    $.yafov.setMessage('datetest', 'The date must be later than today');
 
     // Initialize the validator
-    var validator = $('#NewTypes').yafov();
-
-    // Listen to invalidfound event and show error
-    // Every time the validator finds an invalid element, the invalidfound
-    // event will be triggered
-    validator.bind('invalidfound', function (e, error) {
-        var field = $(error.field),
-            fieldId = field.attr('id'),
-
-            // default error message
-            msg = 'Error found: ' + error.name,
-            label;
-
-        // checking the name of the validation result to find out what was the error
-        switch (error.name) {
-        case 'required':
-            // you can see if it's an error of a group
-            if (error.isGroup) {
-                msg = 'The field is required. (group)';
-            } else {
-                msg = 'The field is required.';
+    var validator = $('#NewTypes').yafov({
+        // Example how you can overwrite the default onInvalidFound event
+        // handler with your own
+        // Added some logging then call the original one which will place the error messages
+        onInvalidFound: function (e, error) {
+            if (window.console && window.console.log) {
+                // window.console.log(error);
             }
-            break;
-        case 'number':
-            msg = 'The value must be a number.';
-            break;
-        case 'email':
-            msg = 'Please enter a valid email address.';
-            break;
-        case 'url':
-            msg = 'Please enter a valid url.';
-            break;
-        case 'datetest':
-            msg = 'The date must be later than today';
-            break;
+            $.yafov.onInvalidFound(e, error);
         }
 
-        // add error class to field
-        field.addClass('error').removeClass('valid');
-
-        label = $('<label />');
-        label.addClass('error').attr('for', fieldId).text(msg);
-        // remove existing error message
-        field.parent().find('label.error').remove()
-          // add new error message
-          .end().append(label);
-    });
-
-    // Listen to validfound event and remove the error message if needed
-    validator.bind('validfound', function (e, error, element) {
-        var field = $(error.field);
-        field.removeClass('error').addClass('valid');
-        field.parent().find('label.error').remove();
     });
 
     // Listen to formvalid event and submit the form
-    validator.bind('formvalid', function (e, args) {
+    validator.bind($.yafov.events.FORM_VALID, function (e, args) {
         // this.submit();
         $('#Messages').text('the form is valid').addClass('hasMessage');
     });
 
     // Listen to forminvalid and do nothing now :) You may wan't to log the issues
-    validator.bind('forminvalid', function (e, args) {
+    validator.bind($.yafov.events.FORM_INVALID, function (e, args) {
         $('#Messages').text('the form is invalid').addClass('hasMessage');
         // scroll to the first invalid element
         window.scrollTo(0, args.errors[0].field.parent().position().top - 10);
@@ -326,7 +288,7 @@ $(document).ready(function () {
     });
     // When user clicks on #ForceTelValidate button all validator methods will
     // be called only on one field and the callback will put a message into the
-    // Messages div
+    // #Messages div
     $('#ForceTelValidate').click(function () {
         $.yafov.validate($('#TelTest'), function (result) {
             var msg = 'The tel field is valid';
@@ -342,16 +304,17 @@ $(document).ready(function () {
 });
     </script>
     <script type="text/javascript">
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-112351-9']);
-      _gaq.push(['_trackPageview']);
+        if (window.location.host !== '') {
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-112351-9']);
+            _gaq.push(['_trackPageview']);
 
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-
+            (function() {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        }
     </script>
 	</body>
 </html>
