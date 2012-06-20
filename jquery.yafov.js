@@ -317,39 +317,36 @@ THE SOFTWARE.
      *
      */
     function validateElement(element, cb) {
-        var that = $(element),
+        var that, isGroup, result, props;
 
-            isGroup = isGroupElement(element),
+        that = $(element);
 
-            // length of the validator methods
-            vl = validatorMethods.len(isGroup),
-            // loop index: get validators by their index
-            index = 0,
-            // default result object
-            result = {
-                isValid: true,
-                name: '',
-                field: that,
-                isGroup: isGroup
-            },
-            props,
-            // method run when a validation finished
-            value;
-          // get the value once, so it gonna be cached
-        value = (that.is('[type=checkbox]')) ?  that.is(':checked') : that.val();
+        isGroup = isGroupElement(element);
+
+        // default result object
+        result = {
+            isValid: true,
+            name: '',
+            field: that,
+            isGroup: isGroup
+        };
 
         props = {
             index: 0,
             result: result,
             that: that,
             cb: cb,
-            methodsLength: vl,
+            methodsLength: validatorMethods.len(isGroup),
             validate: validate,
             isGroup: isGroup,
-            value: value
+            value: (that.is('[type=checkbox]')) ?  that.is(':checked') : that.val()
         };
 
         validate(props);
+    }
+
+    function validateOnElementEvent(e) {
+        methods.validate(e.target);
     }
 
     methods = {
@@ -378,21 +375,14 @@ THE SOFTWARE.
         delegateEvents: function delegateEventsInnerMethod(selectors, flags, element, settings) {
             var events = [],
                 $element = $(element),
-                key,
                 i,
                 el;
-
-            function validateOnElementEvent(e) {
-                methods.validate(e.target);
-            }
 
             $.each(flags, function (key, value) {
                 if (value) {
                     events.push(key);
                 }
             });
-
-            key = 0;
 
             for (i = 0, el = events.length; i < el; i += 1) {
                 $element.delegate(selectors, events[i] + '.yafov', validateOnElementEvent);
