@@ -301,6 +301,9 @@ $(document).ready(function () {
             window.scrollTo(0, $('#Messages').closest('form').position().top);
         });
     });
+    $('#InvalidateTel').click(function () {
+        $.yafov.invalidateField($('#TelTest').get(0));
+    });
 });
     </script>
     <script type="text/javascript">

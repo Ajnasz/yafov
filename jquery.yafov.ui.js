@@ -141,6 +141,12 @@ THE SOFTWARE.
     }
     $.yafov.onValidFound = onValidFoundCallback;
     $.yafov.onInvalidFound = onInvalidFoundCallback;
+    $.yafov.invalidateField = function invalidateField(field) {
+        field = $(field);
+        field.removeClass($.yafov.classes.INVALID_ELEMENT)
+            .removeClass($.yafov.classes.VALID_ELEMENT);
+        field.parent().find('label').filter('.' + $.yafov.classes.INVALID_ELEMENT).remove();
+    }
 
     $.fn.yafov = function (options) {
         var validator, onInvalidFound, onValidFound;
